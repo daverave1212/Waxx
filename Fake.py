@@ -2,4 +2,11 @@
 
 operators = ['==', '<=', '>=', '(', ')', '=', '+', ';', ':']
 
-stringSeparators = ["'", '"', '`']
+separators = [
+    ['"', '"'],
+    ["'", "'"],
+    ['/*', '*/']
+]
+
+class Keywords:
+    FUNC_DECL   = 'def'

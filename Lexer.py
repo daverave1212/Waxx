@@ -1,29 +1,45 @@
 from Token import *
 import WordUtils as WU
+import Utils as U
 import Fake
 from Utils import lastpos
 
-print = WU.rewritePrint(print)
+print   = WU.rewritePrint(print)
+map     = U.rewriteMap(map)
 
 
 # States for the following function
 BLANKS     = 1      # Reading blanks
 WORDS      = 2      # Reading words
 OPERATORS  = 3      # Reading operators
-STRING     = 4      # Reading string
+STRING     = 4      # Reading string or comment of some sort
 
 def isBlank(char):
     return char == ' ' or char == '\t'
 
 def isOperator(text, position, operators):
     result = WU.isAnySubstringAt(operators, text, position)
-    if result:
+    if result != None:
         return operators[result]
     return None
 
+def startsString(text, position, separators):
+    sepsStart = map(lambda pair : pair[0], separators)
+    result = WU.isAnySubstringAt(sepsStart, text, position)
+    if result != None:
+        return separators[result]
+    return None
+    
+def endsString(text, position, separator):
+    result = WU.isSubstringAt(separator, text, position)
+    if result != None:
+        return result
+    return None
+
 class Splitter:
-    def __init__(self, text, operators):
-        self.operators = operators
+    def __init__(self, text, operators, separators):
+        self.operators  = operators
+        self.separators = separators
         self.text  = text
         self.words = []
         self.currentPos = -1
@@ -31,14 +47,22 @@ class Splitter:
         self.indentation = 0
         self.state = BLANKS
         self.theOperator = None
+        self.theSeparatorPair = None
 
     def pushWord(self, start, end):
         self.words.append(self.text[start:end])
 
     def isAtAnOperator(self):
         self.theOperator = isOperator(self.text, self.currentPos, self.operators)
-        print(f'My operator: {self.theOperator}')
         return self.theOperator != None
+
+    def isAtStringStart(self):
+        self.theSeparatorPair = startsString(self.text, self.currentPos, self.separators)
+        return self.theSeparatorPair != None
+
+    def isAtStringEnd(self):
+        return endsString(self.text, self.currentPos, self.theSeparatorPair[1])
+
 
 
     def findIndentation(self):
@@ -48,9 +72,9 @@ class Splitter:
             elif self.char == '\t':
                 self.indentation += 4
             else:
-                print('Ended indentation well')
                 self.advance(-1)
                 break
+
 
     def stepBlank(self):
         if isBlank(self.char):      # Space
@@ -60,6 +84,9 @@ class Splitter:
             self.pushWord(self.currentPos, endPos)
             skips  = len(self.theOperator) - 1
             self.advance(skips)
+        elif self.isAtStringStart():
+            self.start = self.currentPos
+            self.state = STRING
         else:                       # Word
             self.start = self.currentPos
             self.state = WORDS
@@ -75,8 +102,21 @@ class Splitter:
             skips  = len(self.theOperator) - 1
             self.state = BLANKS
             self.advance(skips)
+        elif self.isAtStringStart():
+            self.start = self.currentPos
+            self.state = STRING
         else:
             pass
+
+    def stepString(self):
+        if self.isAtStringEnd():
+            self.pushWord(self.start, self.currentPos + len(self.theSeparatorPair[1]))
+            self.state = BLANKS
+            skips  = len(self.theSeparatorPair[1]) - 1
+            self.advance(skips)
+        else:
+            pass
+        
 
     def splitLine(self):
         text  = self.text
@@ -85,7 +125,12 @@ class Splitter:
                 self.stepBlank()
             elif self.state is WORDS:
                 self.stepWord()
-        if self.state is WORDS and self.start != lastpos(self.text):
+            elif self.state is STRING:
+                self.stepString()
+
+        if self.state is WORDS:
+            self.pushWord(self.start, len(self.text))
+        elif self.state is STRING:
             self.pushWord(self.start, len(self.text))
 
     def advance(self, times=1):
@@ -106,74 +151,11 @@ class Splitter:
         self.splitLine()
         return self.getResult()
 
-        
-splitter = Splitter('  def advance(self, times=1):', Fake.operators)
-line = splitter.parse()
-print(' Here it is.... ')
-print(line.toString())
-'''
-def splitTextIntoWords(text, operators):
-    start = -1
-    state = BLANKS
-    words = []
-    skip = 0
-
-    indentation = 0
-    firstCharIndex = 0
-    firstChar = 'tba'
-    if len(text) > 0:
-        firstChar = text[0]
-        while isBlank(firstChar):
-            if firstChar == ' ':
-                indentation += 1
-            elif firstChar == '\t':
-                indentation += 4
-            firstCharIndex += 1
-            firstChar = text[firstCharIndex]
-        skip = firstCharIndex
-
-    for i, char in enumerate(text):
-        if skip:
-            skip -= 1
-            continue
-
-        if state is BLANKS:
-            if isBlank(char):                           
-                continue
-            theOperator = isOperator(text, i, operators)                
-            if theOperator:
-                newI = i + len(theOperator)
-                print(text[i:newI])
-                words.append(text[i:newI])
-                state = BLANKS
-                skip = len(theOperator) - 1
-            else:
-                start = i
-                state = WORDS
-
-        elif state is WORDS:
-            if isBlank(char):
-                words.append(text[start:i])
-                state = BLANKS
-            theOperator = isOperator(text, i, operators)                
-            if theOperator:
-                words.append(text[start:i])
-                newI = i + len(theOperator)
-                words.append(text[i:newI])
-                state = BLANKS
-                skip = len(theOperator) - 1
-            else:
-                continue
-    if state is WORDS and start < len(text) - 1:
-        words.append(text[start:len(text)])
-    return StringLine(indentation, words)
-'''
-
 def readFileAndSplit(fileName):
     lines = WU.readFileIntoLines(fileName)
-    lines = list(map(lambda line : splitTextIntoWords(line, Fake.operators), lines))
-
-    strLines = list(map(lambda x : x.toString(), lines))
+    lines = map(lambda line : Splitter(line, Fake.operators, Fake.separators).parse(), lines)
+    strLines = map(lambda line : line.toString(), lines)
     print(strLines)
+    return lines
 
 readFileAndSplit('Test.waxx')

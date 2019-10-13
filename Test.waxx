@@ -1,0 +1,9 @@
+
+
+
+
+def isOperator EXPR :
+    result = WU.isAnySubstringAt EXPR
+    if result != None :
+        return operators [ result ]
+    return None

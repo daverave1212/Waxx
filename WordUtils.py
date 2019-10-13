@@ -23,10 +23,10 @@ def readFileIntoLines(fileName):
 
 def isSubstringAt(sub, string, start=0):
     if len(string) - start < len(sub):
-        return False
+        return None
     for char in sub:
         if char != string[start]:
-            return False
+            return None
         start += 1
     return True
 
@@ -35,7 +35,10 @@ def isAnySubstringAt(subs, string, start):
         result = isSubstringAt(sub, string, start)
         if result:
             return i
-    return False
+    return None
+
+def spaces(n):
+    return ' ' * n
 
 
 

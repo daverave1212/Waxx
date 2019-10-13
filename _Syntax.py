@@ -3,6 +3,23 @@
 
 
 
+###############
+
+ATOM        # Expecting...
+    ,       # List
+    (       # Function call
+    
+
+
+# Function declaration:
+def ATOM EXPR(list) :
+def ATOM ( EXPR ) :
+def ATOM LIST
+
+# Var declaration
+TYPE ATOM
+
+
 
 
 ###############
@@ -17,7 +34,7 @@ def myFunc ( a , b ) :
 
 
 
-Array < var > mystring 
+Array < var > mystring
 
 # Idea : identify lists ( 'a,b,c' )
 
@@ -51,8 +68,8 @@ VAR_DECL , VAR_DECL , VAR_DECL
 # FUNC_DECL
 func ATOM ( VAR_DECL_LIST ) :
 
-# EXPR
+# EXPR - every expression can be a list of expresisons
+( EXPR , EXPR )     # Expression (list)
+( anything )        # Expression (list) with only one element
 ATOM
 EXPR OPERATOR EXPR
-
-
