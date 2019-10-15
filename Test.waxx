@@ -1,7 +1,3 @@
-
-
-
-
 def isOperator EXPR :
     result = WU.isAnySubstringAt EXPR
     if result != None :

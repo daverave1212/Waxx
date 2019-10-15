@@ -1,8 +1,9 @@
-from Token import *
 import WordUtils as WU
 import Utils as U
 import Fake
 from Utils import lastpos
+from Utils import isBlank
+from Utils import isOperator
 
 print   = WU.rewritePrint(print)
 map     = U.rewriteMap(map)
@@ -14,14 +15,7 @@ WORDS      = 2      # Reading words
 OPERATORS  = 3      # Reading operators
 STRING     = 4      # Reading string or comment of some sort
 
-def isBlank(char):
-    return char == ' ' or char == '\t'
 
-def isOperator(text, position, operators):
-    result = WU.isAnySubstringAt(operators, text, position)
-    if result != None:
-        return operators[result]
-    return None
 
 def startsString(text, position, separators):
     sepsStart = map(lambda pair : pair[0], separators)
@@ -35,6 +29,7 @@ def endsString(text, position, separator):
     if result != None:
         return result
     return None
+
 
 class Splitter:
     def __init__(self, text, operators, separators):
@@ -136,15 +131,15 @@ class Splitter:
     def advance(self, times=1):
         self.currentPos += times
         if self.currentPos == len(self.text):
-            print("Finished")
             self.char = None
             return False
         else:
             self.char = self.text[self.currentPos]
             return True
 
+    # Returns a list of StringLine objects
     def getResult(self):
-        return StringLine(self.indentation, self.words)
+        return WU.StringLine(self.indentation, self.words)
 
     def parse(self):
         self.findIndentation()
@@ -158,4 +153,3 @@ def readFileAndSplit(fileName):
     print(strLines)
     return lines
 
-readFileAndSplit('Test.waxx')
