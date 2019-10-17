@@ -7,37 +7,32 @@ class Word:
     def toString(self):
         return self.string
 
-# A pair of a list of strings plus indentation
-class StringLine:
-    def __init__(self, indent, theList=[]):
-        self.words = theList
-        self.indentation = indent
-    def toString(self):
-        return spaces(self.indentation) + '  '.join(self.words)
-
 class WordLine:
-    def __init__(self, stringLine):
-        self.indentation = stringLine.indentation
-        self.words = list(map(lambda word : Word(word), stringLine.words))
+    def __init__(self, indentation, words):
+        self.indentation = indentation
+        self.words = words
     def toString(self):
         strings = list(map(lambda word : word.string, self.words))
         return spaces(self.indentation) + '  '.join(strings)
 
-def stringLinesToWordLines(stringLines):
-    return list(map(lambda stringLine : WordLine(stringLine), stringLines))
 
-
+def printWordLines(wordLines):
+    for line in wordLines:
+        print(line.toString())
 
 
 def rewritePrint(oldPrint):
     def newPrint(what):
         if type(what) is list:
-            if type(what[0]) is list:
+            if len(what) == 0:
+                print('[]')
+            elif type(what[0]) is list:
                 for li in what:
-                    print(','.join(li))
+                    print(li)
+            elif type(what[0]) is str:
+                print('  '.join(what))
             else:
-                for string in what:
-                    print(string)
+                oldPrint(what)
         else:
             oldPrint(what)
     return newPrint

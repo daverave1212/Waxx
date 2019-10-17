@@ -1,18 +1,11 @@
 
 
-import Lexer
-import WordUtils
+import Splitter
+import Words
+import Grammar
 from sys import exit
 
-print = WordUtils.rewritePrint(print)
+lines = Words.readFileIntoLines('Test.waxx')
+lines = Splitter.splitLines(lines, Grammar.operators, Grammar.separators)
 
-
-
-lines = Lexer.readFileAndSplit('Test.waxx')
-wordLines = WordUtils.stringLinesToWordLines(lines)
-
-
-print('Done')
-
-wordLines = list(map(lambda line : line.toString(), wordLines))
-print(wordLines)
+Words.printWordLines(lines)

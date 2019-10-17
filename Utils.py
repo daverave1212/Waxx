@@ -1,6 +1,6 @@
 
 
-import WordUtils as WU
+import Words as W
 
 def rewriteMap(oldMap):
     def newMap(func, victim):
@@ -24,7 +24,7 @@ def isBlank(char):
     return char == ' ' or char == '\t'
 
 def isOperator(text, position, operators):
-    result = WU.isAnySubstringAt(operators, text, position)
+    result = W.isAnySubstringAt(operators, text, position)
     if result != None:
         return operators[result]
     return None
