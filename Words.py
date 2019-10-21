@@ -2,17 +2,20 @@
 class Word:
     def __init__(self, string):
         self.string = string
-        self.parenthesisEnd = None      # If it's "(", then self.parenthesisEnd is the position of the other parenthesis
-        self.parenthesisStart = None    # Same here
+        self.pairLine = None
+        self.pairWord = None
     def toString(self):
-        return self.string
+        if self.pairLine != None:
+            return self.string + '/' + str(self.pairLine) + ',' + str(self.pairWord)
+        else:
+            return self.string
 
 class WordLine:
     def __init__(self, indentation, words):
         self.indentation = indentation
         self.words = words
     def toString(self):
-        strings = list(map(lambda word : word.string, self.words))
+        strings = list(map(lambda word : word.toString(), self.words))
         return spaces(self.indentation) + '  '.join(strings)
 
 

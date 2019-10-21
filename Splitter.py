@@ -6,6 +6,17 @@ from Utils import isOperator
 from Words import Word
 from Words import WordLine
 
+# # # Main function for this module # # #
+# # # Takes in a list of strings  # # # #
+# # # Outputs a list of WordLine  # # # #
+def splitLines(lines, operators, separators):
+    return Splitter(lines, operators, separators).parse()
+
+
+
+
+
+
 print   = W.rewritePrint(print)
 map     = U.rewriteMap(map)
 
@@ -157,8 +168,6 @@ class Splitter:
         for line in self.outputLines:
             print(line.toString())
 
-def splitLines(lines, operators, separators):
-    return Splitter(lines, operators, separators).parse()
 
 
 

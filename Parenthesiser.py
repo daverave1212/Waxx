@@ -1,38 +1,23 @@
-from WordUtils import Word
-from Utils import lastpos
+from Words import Word
+from Words import WordLine
 
+class Position:
+    def __init__(self, i, j):
+        self.i = i
+        self.j = j
 
-
-# Take in a list of WordLine
-# Returns the same list, but with parentheses paired up
-class Parenthesiser:
-
-    def __init__(self, stringLines):
-        self.lines = stringLines
-    
-    def parseLine(self, line):
-        words = []
-        parStack = []
-        for string in line:
-            words.append(Word(string))
+def parenthesise(wordLines):
+    parStack = []
+    for i, line in enumerate(wordLines):
+        for j, word in enumerate(line.words):
+            string = word.string
             if string == '(':
-                parStart.append(lastpos(words))
+                parStack.append(Position(i, j))
             elif string == ')':
-                parStartPos = parStack.pop()
-                parEndPos    = lastpos(words)
-                words[parStartPos].parenthesisEnd = parEndPos
-                words[parEndPos].parenthesisStart = parStartPos
-        return words
-
-    def parse(self):
-        wordLines = []
-        for line in self.lines:
-            words = self.parseLine(line)
-            wordLines.append(words)
-        return wordLines
-
-
-def parenthesise(lines):
-    return Parenthesiser(lines).parse()
-
+                openPos = parStack.pop()
+                wordLines[openPos.i].words[openPos.j].pairLine = i
+                wordLines[openPos.i].words[openPos.j].pairWord = j
+                word.pairLine = openPos.i
+                word.pairWord = openPos.j
+    return wordLines
 
