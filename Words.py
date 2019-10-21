@@ -19,10 +19,13 @@ class WordLine:
         return spaces(self.indentation) + '  '.join(strings)
 
 
+
+
+
+
 def printWordLines(wordLines):
     for line in wordLines:
         print(line.toString())
-
 
 def rewritePrint(oldPrint):
     def newPrint(what):
@@ -40,13 +43,14 @@ def rewritePrint(oldPrint):
             oldPrint(what)
     return newPrint
 
-
-
 def readFileIntoLines(fileName):
     with open(fileName, 'r') as file: 
         text = file.read()
         return text.splitlines()
     return ''
+
+
+
 
 def isSubstringAt(sub, string, start=0):
     if len(string) - start < len(sub):

@@ -17,6 +17,7 @@ EXPRESSION              = 6
 class Token:
     def __init__(self, type):
         self.type = type
+        self.subtype = None
 
 
 
