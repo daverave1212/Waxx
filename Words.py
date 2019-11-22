@@ -1,3 +1,29 @@
+'''
+    Contains various functions and classes, such as Word and WordLine
+
+    Classes:
+        Word
+        WordLine
+
+    Functions:
+        o printWordLines(wordLines)
+        o readFileIntoLines(fileName) : [str]
+        o isSubstringAt(sub, string, start=0) : Bool
+            Checks if sub starts the same as string from position start
+        o isAnySubstringAt(subs, string, start) : Int
+            Checks if any of the subs starts the same as string from position start
+            Returns the index of the sub, or None if not found
+        
+
+    Word:
+        A string (a literal word, operator, keyword, etc) which holds some metadata
+        For example, it can hold where its matching paranthesis is
+
+    WordLine:
+        A list of Word which holds some metadata, such as indentation.
+'''
+
+
 
 class Word:
     def __init__(self, string):
@@ -22,11 +48,12 @@ class WordLine:
 
 
 
-
+# Prints a list of WordLine
 def printWordLines(wordLines):
     for line in wordLines:
         print(line.toString())
 
+# Overwrites the 'print' function to give it better functionality
 def rewritePrint(oldPrint):
     def newPrint(what):
         if type(what) is list:
@@ -43,6 +70,7 @@ def rewritePrint(oldPrint):
             oldPrint(what)
     return newPrint
 
+# 
 def readFileIntoLines(fileName):
     with open(fileName, 'r') as file: 
         text = file.read()
@@ -53,13 +81,7 @@ def readFileIntoLines(fileName):
 
 
 def isSubstringAt(sub, string, start=0):
-    if len(string) - start < len(sub):
-        return None
-    for char in sub:
-        if char != string[start]:
-            return None
-        start += 1
-    return True
+    return string.startswith(sub, start)
 
 def isAnySubstringAt(subs, string, start):
     for i, sub in enumerate(subs):

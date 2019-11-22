@@ -1,4 +1,9 @@
-
+'''
+    isDigit(char)
+    isBlank(char)
+    isOperator(text, charPos, operators) : operators[result]
+    isNumber(str)
+'''
 
 import Words as W
 
@@ -14,15 +19,6 @@ def rewriteMap(oldMap):
 def lastpos(li):        # Returns the position of the last element
     return len(li) - 1
 
-def last(li):
-    return li[len(li) - 1]
-
-def isDigit(char):
-    return char in '0987654321'
-
-def isBlank(char):
-    return char == ' ' or char == '\t'
-
 def isOperator(text, position, operators):
     result = W.isAnySubstringAt(operators, text, position)
     if result != None:
@@ -30,5 +26,5 @@ def isOperator(text, position, operators):
     return None
 
 def isNumber(string):
-    return isNumber(string[0]) and isNumber(last(string))
+    return isNumber(string[0]) and isNumber(string[-1])
     

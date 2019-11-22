@@ -1,7 +1,6 @@
 import Words as W
 import Utils as U
 from Utils import lastpos
-from Utils import isBlank
 from Utils import isOperator
 from Words import Word
 from Words import WordLine
@@ -27,19 +26,23 @@ WORDS      = 2      # Reading words
 OPERATORS  = 3      # Reading operators
 STRING     = 4      # Reading string or comment of some sort
 
+# Checks if text[position:] starts with any of the possible string separators
+# Returns the separators as a string, or None
 def startsString(text, position, separators):
-    sepsStart = map(lambda pair : pair[0], separators)
+    sepsStart = map(lambda pair : pair[0], separators)      # All 'operators' that start a string
     result = W.isAnySubstringAt(sepsStart, text, position)
     if result != None:
         return separators[result]
     return None
     
+# Checks if text[position:] is equal to the given separator
 def endsString(text, position, separator):
     result = W.isSubstringAt(separator, text, position)
     if result != None:
         return result
     return None
 
+# Takes a string and counts how many spaces it has in front of it
 def findIndentation(string):
     indentation = 0
     for char in string:
@@ -118,7 +121,7 @@ class Splitter:
         self.currentLineIndentation = indentation
 
     def stepBlank(self):
-        if isBlank(self.getCurrentChar()):       # Space
+        if self.getCurrentChar().isspace(): # Space
             pass
         elif self.isAtAnOperator():         # Operator
             endPos = self.currentCharIndex + len(self.theOperator)
@@ -132,7 +135,7 @@ class Splitter:
             self.state = WORDS
 
     def stepWord(self):
-        if isBlank(self.getCurrentChar()):
+        if self.getCurrentChar().isspace():
             self.pushWord(self.start, self.currentCharIndex)
             self.state = BLANKS
         elif self.isAtAnOperator():
