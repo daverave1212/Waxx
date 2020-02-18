@@ -1,10 +1,11 @@
+'''
+    The only relevant function of this script is parenthesise(wordLines)
+    Takes a list of WordLine and outputs the same list, but does the parenthesis pairing up
+'''
+
 from Words import Word
 from Words import WordLine
-
-class Position:
-    def __init__(self, i, j):
-        self.i = i
-        self.j = j
+from Utils import Position
 
 def parenthesise(wordLines):
     parStack = []

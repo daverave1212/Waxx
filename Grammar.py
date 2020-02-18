@@ -1,6 +1,6 @@
 
 
-operators = ['!=', '!', '==', '<=', '>=', '(', ')', '=', '+', ';', ':']
+operators = ['!=', '!', '.', '==', '<=', '>=', '(', ')', '=', '+', ';', ':', '<', '>']
 
 separators = [
     ['"', '"'],
@@ -8,5 +8,7 @@ separators = [
     ['/*', '*/']
 ]
 
-class Keywords:
-    FUNC_DECL   = 'def'
+flowControlConditions = ['if', 'else', 'elif', 'while']
+
+def isStringOperator(string):
+    return string in operators

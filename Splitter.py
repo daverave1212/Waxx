@@ -47,7 +47,7 @@ def findIndentation(string):
     indentation = 0
     for char in string:
         if char == '\t':
-            indentation += 4
+            indentation += 4    # TODO make it variable or something
         elif char == ' ':
             indentation += 1
         else:

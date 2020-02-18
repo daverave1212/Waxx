@@ -23,8 +23,6 @@
         A list of Word which holds some metadata, such as indentation.
 '''
 
-
-
 class Word:
     def __init__(self, string):
         self.string = string
@@ -35,20 +33,34 @@ class Word:
             return self.string + '/' + str(self.pairLine) + ',' + str(self.pairWord)
         else:
             return self.string
+    def getMatchingParenthesis(self):
+        return (self.pairLine, self.pairWord)
 
 class WordLine:
-    def __init__(self, indentation, words):
+    def __init__(self, indentation, words, lineNumber=None):
         self.indentation = indentation
         self.words = words
-    def toString(self):
+        self.lineNumber = lineNumber
+    def toString(self, fromPos=0, toPos=None):
+        if toPos is None:
+            toPos = len(self.words)
         strings = list(map(lambda word : word.toString(), self.words))
+        strings = strings[fromPos:toPos]
         return spaces(self.indentation) + '  '.join(strings)
+    def getLength(self):
+        return len(self.words)
 
 
 
 
 
 # Prints a list of WordLine
+def printWords(words):
+    ret = ''
+    for word in words:
+        ret += word.string + ' '
+    print(ret)
+
 def printWordLines(wordLines):
     for line in wordLines:
         print(line.toString())
@@ -70,7 +82,9 @@ def rewritePrint(oldPrint):
             oldPrint(what)
     return newPrint
 
-# 
+'''
+Reads the contents of the file directly into a list of str
+'''
 def readFileIntoLines(fileName):
     with open(fileName, 'r') as file: 
         text = file.read()
