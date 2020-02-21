@@ -22,10 +22,10 @@ class Scope:
         self.line = wordLine.words
         self.content = []
 
-    def print(self):
-        Words.printWords(self.line)
-        if len(self.content) > 0:
-            printScopeList(self.content)
+    def print(self, indentation=0):
+        Words.printWords(self.line, indentation)
+        for scope in self.content:
+            scope.print(indentation + 4)
 
 def printScopeList(scopes):
     for scope in scopes:

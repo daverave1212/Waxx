@@ -6,20 +6,36 @@ import Grammar
 import Parenthesiser
 import LineNumberer
 import Scoper
+import Collapser
 
 import Expressizer
 from sys import exit
 
 stringLines = Words.readFileIntoLines('Test.waxx')      # Reads the file into a list of str
 
-lines = Splitter.splitLines(stringLines, Grammar.operators, Grammar.separators) # For each str, splits it into tokens (Word) and for that line, returns a WordLine
-lines = Parenthesiser.parenthesise(lines)   # Looks for matching parenthesis: if a Word is '(', sets its pairLine and pairWord to the matching ')' position
-lines = LineNumberer.numberLines(lines)     # Sets each line's lineNumber to its index in the list
+wordLines = Splitter.splitLines(stringLines, Grammar.operators, Grammar.separators) # For each str, splits it into tokens (Word) and for that line, returns a WordLine
+wordLines = Parenthesiser.parenthesise(wordLines)   # Looks for matching parenthesis: if a Word is '(', sets its pairLine and pairWord to the matching ')' position
+wordLines = LineNumberer.numberLines(wordLines)     # Sets each line's lineNumber to its index in the list
+
+wordLines = Collapser.collapseParentheses(wordLines)
+Words.printWordLines(wordLines)
+# align up lines with parenthesis on different lines first
+
+# lines = Scoper.scope(lines)
+
+
+exit()
+
+# Now, lines contains a list of WordLine
 
 partLines = Expressizer.expressizeLinesByParenthesis(lines)
-partLines = Expressizer.expressizeLinesByConditionKeyword(partLines)
-partLines = Expressizer.expressizeLinesByEquals(partLines)
+partLines = Expressizer.expressizeLinesByConditionKeyword2(partLines)
 Expressizer.printPartLines(partLines)
+exit()
+
+
+partLines = Expressizer.expressizeLinesByEquals(partLines)
+
 
 # Expressizer.printPartLines(partLines)
 

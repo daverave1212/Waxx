@@ -1,4 +1,23 @@
 '''
+    Word = {
+        string : 'miau',
+        pairLine : 10,
+        pairWord : 6,
+
+        toString(),
+        hasPair(),
+        getMatchingPair() : (pairLine, pairWord)
+    }
+
+    WordLine = {
+        indentation : 4,
+        words : Word[],
+        lineNumber : 512,
+
+        toString(),
+        getLength()
+    }
+
     Contains various functions and classes, such as Word and WordLine
 
     Classes:
@@ -28,23 +47,25 @@ class Word:
         self.string = string
         self.pairLine = None
         self.pairWord = None
-    def toString(self):
-        if self.pairLine != None:
+    def toString(self, printPairs=False):
+        if self.pairLine != None and printPairs:
             return self.string + '/' + str(self.pairLine) + ',' + str(self.pairWord)
         else:
             return self.string
-    def getMatchingParenthesis(self):
+    def getMatchingPair(self):
         return (self.pairLine, self.pairWord)
+    def hasPair(self):
+        return self.pairWord is not None
 
 class WordLine:
     def __init__(self, indentation, words, lineNumber=None):
         self.indentation = indentation
         self.words = words
         self.lineNumber = lineNumber
-    def toString(self, fromPos=0, toPos=None):
+    def toString(self, fromPos=0, toPos=None, printPairs=False):
         if toPos is None:
             toPos = len(self.words)
-        strings = list(map(lambda word : word.toString(), self.words))
+        strings = list(map(lambda word : word.toString(printPairs=printPairs), self.words))
         strings = strings[fromPos:toPos]
         return spaces(self.indentation) + '  '.join(strings)
     def getLength(self):
@@ -55,15 +76,15 @@ class WordLine:
 
 
 # Prints a list of WordLine
-def printWords(words):
-    ret = ''
+def printWords(words, indentation=0):
+    ret = spaces(indentation)
     for word in words:
         ret += word.string + ' '
     print(ret)
 
-def printWordLines(wordLines):
+def printWordLines(wordLines, printPairs=False):
     for line in wordLines:
-        print(line.toString())
+        print(line.toString(printPairs=printPairs))
 
 # Overwrites the 'print' function to give it better functionality
 def rewritePrint(oldPrint):

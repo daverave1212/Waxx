@@ -1,7 +1,12 @@
 int x = 20
 
-def isOperator (myOP):
-    result = WU.isAnySubstringAt ( myIndex + 20 * x )
+def isOperator (myOP + 20):
+    result = WU.isAnySubstringAt (
+        myIndex + 20 * x
+    ) + something (
+        miau
+        + hau
+    )
     if result != None :
         return operators [ result ]
     return None
