@@ -42,6 +42,9 @@
         A list of Word which holds some metadata, such as indentation.
 '''
 
+from Utils import spaces
+
+
 class Word:
     def __init__(self, string):
         self.string = string
@@ -125,8 +128,7 @@ def isAnySubstringAt(subs, string, start):
             return i
     return None
 
-def spaces(n):
-    return ' ' * n
+
 
 
 

@@ -1,67 +1,86 @@
 
-import Words
+from Node import Node
+from Node import NodeLine
+from Node import ScopeNode
+
+from Node import nodeListToString
+
+def noprint(anything):
+    pass
+
+# print = noprint
 
 '''
-    Takes a list of WordLine
-
-    fromLine - including
-    fromWord - including
-    toLine - including
-    toWord - excluding
-
+Takes a list of NodeLine.
+Every NodeLine becomes a ScopeNode, even if it has nothing underneath it (case in which scopeNodes is None for it)
+Returns a wrapper ScopeNode, containing a recursively scoped list of ScopeNodes
 '''
+def nodeLinesToScopeNodes2(nodeLines):
+    wrapperScopeNode = ScopeNode(parent=None, line=None, content=[])
+    currentScopeNode = wrapperScopeNode
+    baseIndentation = nodeLines[0].indentation
+    indentationStack = [baseIndentation]
+    for nodeLine in nodeLines:
+
+        if nodeLine.indentation < indentationStack[-1]:         # After this is done, we have either == or >
+            while nodeLine.indentation < indentationStack[-1]:
+                indentationStack.pop()
+                currentScopeNode = currentScopeNode.parent
+
+        if nodeLine.indentation == indentationStack[-1]:
+            lineScopeNode = ScopeNode(parent=currentScopeNode, line=nodeLine.nodes, content=None)
+            currentScopeNode.content.append(lineScopeNode)
+
+        elif nodeLine.indentation > indentationStack[-1]:
+            indentationStack.append(nodeLine.indentation)
+            newCurrentScopeNode = ScopeNode(parent=currentScopeNode, line=nodeLine.nodes, content=[])
+            currentScopeNode.content.append(newCurrentScopeNode)
+            currentScopeNode = newCurrentScopeNode
+
+    return wrapperScopeNode
 
 
-'''
-A scope is a block of code which holds other lines underneath it.
-It can have a content (a list of multiple scopes) or not.
-If it has no content, it simply means it's just a line and is not a block of code
-'''
-class Scope:
-    def __init__(self, wordLine):
-        self.line = wordLine.words
-        self.content = []
 
-    def print(self, indentation=0):
-        Words.printWords(self.line, indentation)
-        for scope in self.content:
-            scope.print(indentation + 4)
 
-def printScopeList(scopes):
-    for scope in scopes:
-        scope.print()
 
-'''
-Takes a list of WordLines (after it was parenthesized by Parenthseiser.py).
-Returns a list of Scopes - basically an abstract syntax tree but containing only lines
-It is reccursive. It will automatically scope everything in it.
-Ex:
-    Scope: def foo ( x ) :
-        Scope: y = 20
-        Scope: return x + y
-'''
-def scope(lines, fromLine=0, toLine=None):
-    if toLine is None:
-        toLine = len(lines)
-    i = fromLine
-    baseIndentation = lines[fromLine].indentation
-    scopes = []
-    while i < toLine:
-        line = lines[i]
-        if line.indentation > baseIndentation:  # We found a subblock of code
-            lastScope = scopes[-1]
-            blockStart = i  # Start of the block
-            while lines[i].indentation > baseIndentation:
-                i += 1
-                if i >= toLine:
-                    break
-            blockEnd = i    # End of the block
-            lastScope.content = scope(lines, blockStart, blockEnd)
+
+
+
+
+def nodeLinesToScopeNodes(nodeLines):
+
+    wrapperScopeNode = ScopeNode(parent=None, line=None, content=[], indentation=-1)
+    previousScopeNode = wrapperScopeNode
+
+    for nodeLine in nodeLines:
+
+        if nodeLine.indentation < previousScopeNode.indentation:
+            while nodeLine.indentation < previousScopeNode.indentation:
+                previousScopeNode = previousScopeNode.parent
+
+        if nodeLine.indentation > previousScopeNode.indentation:
+            scopeNode = ScopeNode(
+                parent = previousScopeNode,
+                line = nodeLine.nodes,
+                content = [],
+                indentation = nodeLine.indentation)
+            previousScopeNode.content.append(scopeNode)
+            previousScopeNode = scopeNode
+        
+        elif nodeLine.indentation == previousScopeNode.indentation:
+            parent = previousScopeNode.parent
+            scopeNode = scopeNode = ScopeNode(
+                parent = previousScopeNode.parent,
+                line = nodeLine.nodes,
+                content = [],
+                indentation = nodeLine.indentation)
+            parent.content.append(scopeNode)
+            previousScopeNode = scopeNode
+
         else:
-            scopes.append(Scope(line))
-        i += 1
-    return scopes
+            print("This should not have happened")
+        
+    return wrapperScopeNode
 
 
-                
-            
+

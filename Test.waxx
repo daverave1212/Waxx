@@ -7,6 +7,7 @@ def isOperator (myOP + 20):
         miau
         + hau
     )
-    if result != None :
+    if pair(value=result) != None :
+        daisy = Dog("Daisy", dog)
         return operators [ result ]
     return None

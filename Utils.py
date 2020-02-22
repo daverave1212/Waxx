@@ -1,11 +1,4 @@
-'''
-    isDigit(char)
-    isBlank(char)
-    isOperator(text, charPos, operators) : operators[result]
-    isNumber(str)
-'''
-
-import Words as W
+import Words
 
 class Position:
     def __init__(self, i, j):
@@ -25,13 +18,22 @@ def lastpos(li):        # Returns the position of the last element
     return len(li) - 1
 
 def isOperator(text, position, operators):
-    result = W.isAnySubstringAt(operators, text, position)
+    result = Words.isAnySubstringAt(operators, text, position)
     if result != None:
         return operators[result]
     return None
 
 def isNumber(string):
-    return isNumber(string[0]) and isNumber(string[-1])
+    return string[0].isdigit() and string[-1].isdigit()
+
+def isString(string, separators):
+    for sep in separators:
+        if string.startswith(sep[0]) and string.endswith(sep[1]):
+            return True
+    return False
+
+def spaces(n):
+    return ' ' * n
 
 
 '''
@@ -47,7 +49,6 @@ def findOnTheSameLevel(wordList, wordToFind, fromWord=0, toWord=None):
     parStack = 0
     while i < toWord:
         word = wordList[i]
-        print('At', word)
         if word == '(':
             parStack += 1
         elif word == ')':
@@ -57,5 +58,3 @@ def findOnTheSameLevel(wordList, wordToFind, fromWord=0, toWord=None):
                 return i
         i += 1
     return None
-
-

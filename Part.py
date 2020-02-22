@@ -67,3 +67,11 @@ def printPartLines(partLines):
 def partListToString(partList):
     return ' '.join(map(lambda p : p.toString(), partList))
 
+
+
+
+def wordToPart(word):
+    
+
+def wordLineToPartLine(wordLine):
+    partLine = PartLine(indentation=wordLine.indentation, )
