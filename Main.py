@@ -1,4 +1,6 @@
 
+from sys import exit
+import json
 
 import Splitter
 import Words
@@ -10,7 +12,9 @@ import Collapser
 import Node
 
 import Expressizer
-from sys import exit
+import Tuplizer
+
+
 
 stringLines = Words.readFileIntoLines('Test.waxx')      # Reads the file into a list of str
 
@@ -23,8 +27,11 @@ nodeLines = Expressizer.nodifyByParentheses(wordLines)  # Transforms all parenth
 
 baseScope = Scoper.nodeLinesToScopeNodes(nodeLines)    # Transforms nodeLines into ScopeNodes based on indentation
 
-baseScope.prettyPrint()
+Tuplizer.tuplizeScope(baseScope)
+
+with open('logs.json', 'w') as f:
+    f.write(json.dumps(baseScope.toDict()))
 
 print('')
-print(baseScope.toString())
+print(baseScope.toDetailedString())
 
