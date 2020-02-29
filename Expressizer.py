@@ -1,4 +1,5 @@
 
+import Words
 from Words import Word
 from Words import WordLine
 
@@ -11,15 +12,18 @@ from Node import wordToNode
 Always use this AFTER collapsing parentheses with Collapser
 Takes in a list of Word and returns a list of Node, with parentheses expressized and basic Node types sorted out.
 '''
-def expressizeParenthesesAndGetNodes(words):
+
+def expressizeParenthesesAndGetNodes(words, fromWord=0, toWord=None):
+    if toWord is None:
+        toWord = len(words)
+    
     nodes = []
-    i = 0
-    while i < len(words):
+    i = fromWord
+    while i < toWord:
         word = words[i]
         if word.hasPair():
-            (_, wordPos) = word.getMatchingPair()               # It will always be on the same line
-            nestedWords = words[i + 1:wordPos]
-            nestedNodes = expressizeParenthesesAndGetNodes(nestedWords)
+            (_, wordPos) = word.getMatchingPair()
+            nestedNodes = expressizeParenthesesAndGetNodes(words, i+1, wordPos)
             nodes.append(ExpressionNode(nestedNodes))
             i = wordPos
         else:

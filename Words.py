@@ -55,6 +55,8 @@ class Word:
             return self.string + '/' + str(self.pairLine) + ',' + str(self.pairWord)
         else:
             return self.string
+    def __str__(self):
+        return self.string
     def getMatchingPair(self):
         return (self.pairLine, self.pairWord)
     def hasPair(self):
@@ -71,12 +73,15 @@ class WordLine:
         strings = list(map(lambda word : word.toString(printPairs=printPairs), self.words))
         strings = strings[fromPos:toPos]
         return spaces(self.indentation) + '  '.join(strings)
+    def __str__(self):
+        return self.toString()
     def getLength(self):
         return len(self.words)
 
 
 
-
+def wordsToString(wordList):
+    return ' '.join([str(word) for word in wordList])
 
 # Prints a list of WordLine
 def printWords(words, indentation=0):

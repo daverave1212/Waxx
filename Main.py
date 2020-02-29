@@ -25,12 +25,12 @@ wordLines = Parenthesiser.parenthesise(wordLines)       # We look again for matc
 
 nodeLines = Expressizer.nodifyByParentheses(wordLines)  # Transforms all parentheses into ExpressionNodes and all other words into SomethingNodes
 
+# Node.printNodeLines(nodeLines)
+
 baseScope = Scoper.nodeLinesToScopeNodes(nodeLines)    # Transforms nodeLines into ScopeNodes based on indentation
 
 Tuplizer.tuplizeScope(baseScope)   # Looks for ExpressionNodes. For each found, if it's actually a tuple, transforms it into a TupleExpressionNode
 
-with open('logs.json', 'w') as f:
-    f.write(json.dumps(baseScope.toDict()))
 
 print('')
 print(baseScope.toDetailedString())

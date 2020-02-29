@@ -4,7 +4,7 @@ from Node import TupleExpressionNode
 
 '''
 Takes a list of Node.
-Returns a list of 
+Returns a list of either Node, or ExpressionNode, and also the type of what was returned (node-list or tuple-elems)
 '''
 def nodesToTupledNodes(nodeList):
 
