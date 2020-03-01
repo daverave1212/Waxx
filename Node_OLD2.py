@@ -35,27 +35,18 @@ def wordToNode(word):
 
 
 class Node:
-    def __init__(self, content):
+    def __init__(self, content, nodeType):
         self.content = content
+        self.type = nodeType
     def __str__(self):
         return str(self.content) if self.content is not None else '<Null>'
     def toDict(self):
-        return { type(self).__name__ : self.content }
+        return {
+            'type' : self.type,
+            'content' : self.content
+        }
     def toDetailedString(self):
-        return type(self).__name__[0:2] + '(' + (str(self.content) if self.content is not None else '<Null>') + ')'
-
-class OperatorNode(Node):
-    pass
-
-class StringNode(Node):
-    pass
-
-class NumberNode(Node):
-    pass
-
-class WordNode(Node):
-    pass
-
+        return self.type[0:2] + '(' + (str(self.content) if self.content is not None else '<Null>') + ')'
 
 
 
@@ -63,33 +54,12 @@ class ExpressionNode(Node): # Contains a list of nodes as content
     def __str__(self):
         return '(' + nodeListToString(self.content) + ')'
     def toDetailedString(self):
-        return 'E(' + nodeListToStringDetailed(self.content) + ')'
-    def toDict(self):
-        return { type(self).__name__ : [node.toDict() for node in self.content] }
-
-class TupleExpressionNode(ExpressionNode):  # self.content is a list of ExpressionNode
-    def __str__(self):
-        return '(' + ' , '.join([str(node) for node in self.content]) + ')'
-    def toDetailedString(self):
-        return 'Tpl(' + ' , '.join([node.toDetailedString() for node in self.content]) + ')'
-    def toDict(self):
-        return { type(self).__name__ : [node.toDict() for node in self.content] }
-
-# Its content usually has only 2 nodes. If it has more, it's probably something like x = y = z
-class OperatorExpressionNode(ExpressionNode):  # self.content is a list of ExpressionNode
-    def __init__(self, content, operator):
-        self.content = content
-        self.operator = operator
-    def __str__(self):
-        return str(self.content[0]) + ' = ' + str(self.content[1])
-    def toDetailedString(self):
-        return self.content[0].toDetailedString() + ' = ' + self.content[1].toDetailedString()
+        return self.type[0:2] + '(' + nodeListToStringDetailed(self.content) + ')'
     def toDict(self):
         return {
-            'operator' : self.operator,
-            type(self).__name__ : [node.toDict() for node in self.content]
+            'type' : self.type,
+            'content' : [node.toDict() for node in self.content]
         }
-
 
 
 class ScopeNode(Node):
