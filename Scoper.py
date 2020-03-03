@@ -1,45 +1,62 @@
 
 
 
+
+
+class Scope:
+    def __init__(self, parent, expression, content, indentation=0):          # parent refers to its parent Scope
+        self.expression = expression
+        self.content = content                    # content is always made up of other Scopes
+        self.parent = parent
+        self.indentation = indentation
+    def __str__(self):
+        ret = self.indentation * ' ' + str(self.expression) + '\n'
+        if len(self.content) > 0:
+            ret += '\n'.join([str(scope) for scope in self.content])
+            ret += '\n'
+        return ret
+
+
+
 '''
-Takes a list of NodeLine.
-Every NodeLine becomes a ScopeNode, even if it has nothing underneath it (case in which scopeNodes is None for it)
-Returns a wrapper ScopeNode, containing a recursively scoped list of ScopeNodes
+Takes a list of ExpressionWithIndentations.
+Every Expression becomes a Scope, even if it has nothing underneath it (case in which content is [] for it)
+Returns a wrapper Scope, containing a recursively scoped list of Scope
 '''
-def nodeLinesToScopeNodes(nodeLines):
 
-    wrapperScopeNode = ScopeNode(parent=None, line=None, content=[], indentation=-1)
-    previousScopeNode = wrapperScopeNode
+def scopify(expressionsWithIndentation):
+    wrapperScope = Scope(parent=None, expression=None, content=[], indentation=-1)
+    previousScope = wrapperScope
 
-    for nodeLine in nodeLines:
-
-        if nodeLine.indentation < previousScopeNode.indentation:
-            while nodeLine.indentation < previousScopeNode.indentation:
-                previousScopeNode = previousScopeNode.parent
-
-        if nodeLine.indentation > previousScopeNode.indentation:
-            scopeNode = ScopeNode(
-                parent = previousScopeNode,
-                line = nodeLine.nodes,
-                content = [],
-                indentation = nodeLine.indentation)
-            previousScopeNode.content.append(scopeNode)
-            previousScopeNode = scopeNode
+    for expr in expressionsWithIndentation:
         
-        elif nodeLine.indentation == previousScopeNode.indentation:
-            parent = previousScopeNode.parent
-            scopeNode = scopeNode = ScopeNode(
-                parent = previousScopeNode.parent,
-                line = nodeLine.nodes,
+        if expr.indentation < previousScope.indentation:
+            while expr.indentation < previousScope.indentation:
+                previousScope = previousScope.parent
+        
+        if expr.indentation > previousScope.indentation:
+            scope = Scope(
+                parent = previousScope,
+                expression = expr.expression,
                 content = [],
-                indentation = nodeLine.indentation)
-            parent.content.append(scopeNode)
-            previousScopeNode = scopeNode
+                indentation = expr.indentation)
+            previousScope.content.append(scope)
+            previousScope = scope
+
+        elif expr.indentation == previousScope.indentation:
+            parent = previousScope.parent
+            scope = Scope(
+                parent = previousScope.parent,
+                expression = expr.expression,
+                content = [],
+                indentation = expr.indentation)
+            parent.content.append(scope)
+            previousScope = scope
 
         else:
             print("This should not have happened")
         
-    return wrapperScopeNode
+    return wrapperScope
 
 
 
