@@ -1,5 +1,7 @@
 
 import Words
+import Grammar
+import logging
 
 class ExpressionWithIndentation:
     def __init__(self, expression, indentation):
@@ -13,11 +15,21 @@ class Expression:
         self.content = content
         self.type = type
         self.parent = parent
+        self.accessModifiers = []
     def __str__(self):
-        if self.type == 'expression':
+        if self.type == 'attribution-left':
+            return ' '.join(self.accessModifiers) + '(' + ' '.join([str(node) for node in self.content]) + ')'
+        if self.type == 'expression' or self.type == 'attribution-right':
             return '(' + ' '.join([str(node) for node in self.content]) + ')'
-        else:
+        elif self.type == 'attribution':
+            logging.info(len(self.content))
+            logging.info(self.content[0])
+            logging.info(self.content[1])
+            return str(self.content[0]) + ' = ' + str(self.content[1])
+        elif self.type == 'tuple':
             return '(' + ' , '.join([str(node) for node in self.content]) + ')'
+        else:
+            logging.error('ERROR: Type ' + self.type + ' not handled!')
 
 class Node:
     def __init__(self, content, type):
@@ -40,6 +52,7 @@ class Parser:
 
     def push(self, what):
         self.currentExpression.content.append(what)
+        print('Pushing ' + str(what.content))
 
     def getCurrentState(self):
         return self.stateStack[-1]
@@ -66,18 +79,30 @@ class Parser:
                 self.inTuple(word)
             elif self.getCurrentState() == 'in-tuple-element':
                 self.inTupleElement(word)
-            print('  ' + str(self.root))
-        return self.currentExpression
+            else:
+                print('Error: State ' + self.getCurrentState() + ' not handled.')
+            print('> ' + str(self.root) + '\t\t|\t' + self.getCurrentState())
+        return self.root
 
     
             
     def inRoot(self, string):
         if string == '(':
             self.branchOut('expression-or-tuple', 'in-expression-or-tuple')
+        elif Grammar.isAccessModifier(string):
+            self.currentExpression.accessModifiers.append(string)
+        elif string == '=':
+            accessModifiers = self.currentExpression.accessModifiers
+            content = self.currentExpression.content
+            self.currentExpression.accessModifiers = []
+            self.currentExpression.content = []
+            self.currentExpression.type = 'attribution'
+            leftExpression = Expression(self.currentExpression, content, 'attribution-left')
+            leftExpression.accessModifiers = accessModifiers
+            self.currentExpression.content = [leftExpression]
+            self.branchOut('attribution-right', 'in-expression-or-tuple')
         else:
             self.push(Node(string, 'node'))
-
-
 
 
     def inExpressionOrTuple(self, string):
@@ -91,18 +116,17 @@ class Parser:
             self.currentExpression.content = [tupleElement]
             self.branchOut('expression', 'in-tuple-element')
         elif string == ')':
-            self.currentExpression.type = 'expression'
             self.brateIn()
         else:
             self.push(Node(string, 'node'))
 
     def inTuple(self, string):
-        print('Not ok')
+        logging.error('Not ok')
         pass
 
     def inTupleElement(self, string):
         if string == '(':
-            self.branchOut('expresison-or-tuple', 'in-expression-or-tuple')
+            self.branchOut('expression-or-tuple', 'in-expression-or-tuple')
         elif string == ',':
             self.brateIn()
             self.branchOut('expression','in-tuple-element')
@@ -118,4 +142,4 @@ def parseWordLines(wordLines):
 
 def printExpressionWithIndentationList(expressionWithIndentationList):
     for expression in expressionWithIndentationList:
-        print(expression)
+        logging.info(str(expression))
