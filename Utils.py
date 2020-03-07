@@ -35,6 +35,9 @@ def isString(string, separators):
 def spaces(n):
     return ' ' * n
 
+def isAtom(str):
+    
+
 
 '''
 Finds the given string (wordToFind) in a list of Words, from fromWord position to toWord position,
