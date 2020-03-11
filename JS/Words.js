@@ -1,10 +1,11 @@
 
 
-let fs = require('fs')
-let os = require('os')
+Grammar = require('./Grammar')
+//fs = require('fs')
+//os = require('os')
 
-let Utils = require('./Utils')
-let spaces = Utils.spaces
+Utils = require('./Utils')
+spaces = Utils.spaces
 
 function readFileIntoLines(fileName){
     return fs.readFileSync(fileName, 'utf8').split(os.EOL)
@@ -15,6 +16,7 @@ class Word {
         this.string = string
         this.pairLine = null
         this.pairWord = null
+        this.type = Grammar.getTokenType(string)
     }
 
     toString() { return this.string }
@@ -36,6 +38,10 @@ class WordLine {
         strings = strings.slice(fromPos, toPos)
         return spaces(this.indentation) + strings.join(' ')
     }
+
+    toTypeString() {
+        return spaces(this.indentation) + this.words.map( word => word.type ).join(' ')
+    }
 }
 
 
@@ -44,3 +50,6 @@ module.exports = {
     Word : Word,
     WordLine : WordLine
 }
+
+__requirer['Words'] = module.exports
+__requirer['./Words'] = module.exports

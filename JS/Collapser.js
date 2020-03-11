@@ -43,10 +43,13 @@ function collapseParentheses(wordLines) {
 
     }
 
-    console.log('Word lines:')
-    console.log(newWordLines)
     return newWordLines
 
 }
 
-module.exports.collapseParentheses = collapseParentheses
+module.exports = {
+    collapseParentheses : collapseParentheses
+}
+
+__requirer['Collapser'] = module.exports
+__requirer['./Collapser'] = module.exports

@@ -1,10 +1,10 @@
 
-let Words = require('./Words')
-let Word = Words.Word
-let WordLine = Words.WordLine
+Words = require('./Words')
+Word = Words.Word
+WordLine = Words.WordLine
 
 function splitLines(lines, operators, separators){
-    return (new Splitter(lines, operators, separators)).parse()
+    return (new Lexer(lines, operators, separators)).parse()
 }
 
 function isSpace(text) {
@@ -65,7 +65,7 @@ function findIndentation(text) {
     return indentation
 }
 
-class Splitter {
+class Lexer {
     constructor (lines, operators, separators) {
         this.lines = lines
         this.operators = operators
@@ -121,6 +121,7 @@ class Splitter {
                 case 'blanks'   : this.stepBlank(); break
                 case 'words'    : this.stepWord(); break
                 case 'string'   : this.stepString(); break
+                default: throw `Lexer Error: state ${this.state} not handled!`
             }
             this.currentCharIndex ++
         }
@@ -132,15 +133,18 @@ class Splitter {
 
     stepBlank() {
         if (isSpace(this.getCurrentChar())) {
-
+            console.log(`  ${this.getCurrentChar()} is space`)
         } else if (this.isAtAnOperator()) {
+            console.log(`  ${this.getCurrentChar()} is operator`)
             let endPos = this.currentCharIndex + this.theOperator.length
             this.pushWord(this.currentCharIndex, endPos)
             this.currentCharIndex += this.theOperator.length - 1
         } else if (this.isAtStringStart()) {
+            console.log(`  ${this.getCurrentChar()} is string`)
             this.start = this.currentCharIndex
             this.state = 'string'
         } else {
+            console.log(`  ${this.getCurrentChar()} is word`)
             this.start = this.currentCharIndex
             this.state = 'words'
         }
@@ -194,3 +198,6 @@ class Splitter {
 module.exports = {
     splitLines : splitLines
 }
+
+__requirer['Splitter'] = module.exports
+__requirer['./Splitter'] = module.exports

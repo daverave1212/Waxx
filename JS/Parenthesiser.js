@@ -24,4 +24,9 @@ function parenthesise(wordLines) {
     return wordLines
 }
 
-module.exports.parenthesise = parenthesise
+module.exports = {
+    parenthesise : parenthesise
+}
+
+__requirer['Parenthesiser'] = module.exports
+__requirer['./Parenthesiser'] = module.exports

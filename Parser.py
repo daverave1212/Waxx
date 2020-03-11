@@ -4,6 +4,8 @@ import Grammar
 import logging
 import re   # Regex
 
+from Grammar import isAccessModifier
+
 logging.basicConfig(format='[%(filename)s:%(lineno)d] %(message)s', level=logging.DEBUG)
 debug = logging.debug
 
@@ -11,7 +13,7 @@ def isAtom(string):
     return re.search("^([a-zA-Z_][a-zA-Z0-9_]*)$", string)
 
 
-    
+
 
 class ExpressionWithIndentation:
     def __init__(self, expression, indentation):
@@ -27,31 +29,13 @@ class Expression:
         self.parent = parent
         self.accessModifiers = []
     def __str__(self):
-        if self.type == 'attribution-left':
-            return ' '.join(self.accessModifiers) + '(' + ' '.join([str(node) for node in self.content]) + ')'
-        if self.type == 'expression' or self.type == 'attribution-right':
-            return '(' + ' '.join([str(node) for node in self.content]) + ')'
-        elif self.type == 'attribution':
-            logging.debug(len(self.content))
-            logging.debug(self.content[0])
-            logging.debug(self.content[1])
-            return str(self.content[0]) + ' = ' + str(self.content[1])
-        elif self.type == 'tuple':
-            return '(' + ' , '.join([str(node) for node in self.content]) + ')'
-        elif self.type == 'class-definition':   # only has 2: [0] is the class name, [1] is a class-extra (mostly just <T>'s)
-            if len(self.content) == 1:
-                return ' '.join(self.accessModifiers) + ' class ' + str(self.content[0]) + ':'
-            elif len(self.content) == 2:
-                return ' '.join(self.accessModifiers) + ' class ' + str(self.content[0]) + ' ' + str(self.content[1]) + ':'
-            else:
-                return ''
-        elif self.type == 'class-extra':
-            return ' '.join([str(elem) for elem in self.content])
+        if True:
+            pass
         else:
             logging.error('ERROR: Type ' + self.type + ' not handled!')
 
 class Node:
-    def __init__(self, content, type):
+    def __init__(self, content, type=None):
         self.content = content
         self.type = type
     def __str__(self):
@@ -78,6 +62,8 @@ class Parser:
 
     def getCurrentState(self):
         return self.stateStack[-1]
+    def setState(self, newState):
+        self.stateStack[-1] = newState
 
     def branchOut(self, expressionType, newState=None):
         newExpression = Expression(content=[], type=expressionType, parent=self.currentExpression)
@@ -104,15 +90,9 @@ class Parser:
     def parse(self):
         strings = [word.string for word in self.wordLine.words]
         stateFunctions = {
-            'in-root'                       : self.inRoot,
-            'in-parenthesis-expression'     : self.inParenthesisExpression,
-            'in-parenthesis-tuple'          : self.inParenthesisTuple,
-            'in-tuple-element'              : self.inTupleElement,
-            'reading-class-name'            : self.readingClassName,
-            'reading-class-extra'           : self.readingClassExtra,
-            'no-state'                      : self.noState
+            'no-state'                      : self.noState,
+            'in-root'                       : self.inRoot
         }
-
 
         for word in strings:
             state = self.getCurrentState()
@@ -123,40 +103,63 @@ class Parser:
             logging.debug('> ' + str(self.root) + '\t\t|\t' + state)
         return self.root
 
+
+
+
+
+
+
     def noState(self, string):
         self.exit('No state for string ' + string)
             
-    def inRoot(self, string):   # Prioritizes = over ,
-        if string == '(':
-            self.branchOut('expression-or-tuple', 'in-parenthesis-expression')
-        elif Grammar.isAccessModifier(string):
+    def inRoot(self, string):
+        if isAccessModifier(string):
             self.currentExpression.accessModifiers.append(string)
-        elif string == '=':
-            self.currentExpression.type = 'attribution'
-            self.wrapOver('attribution-left', nextState='in-attribution')
+            self.setState('reading-modifiers')
+
+    def readingModifiers(self, string):
+        if isAccessModifier(string):
+            self.currentExpression.accessModifiers.append(string)
+        elif isAtom(string):
+            self.readingType(string)
+            
+    def readingType(self, string):
+        if isAtom(string):
+            self.push(Node(string))
+            self.setState('expecting-generic')
+    
+    def expectingGeneric(self, string):
+        if string == '<':
+            self.branchOut('generic-inner', 'reading-generic-inner')
+        elif isAtom(string):
+            self.readingVarName(string)
+    
+    def readingGenericInner(self, string):
+        if string == '>':
             self.brateIn()
-            self.branchOut('attribution-right', 'in-parenthesis-expression')
-        elif string == 'class':
-            self.currentExpression.type = 'class-definition'
-            self.stateStack[-1] = 'reading-class-name'
-            logging.debug('CLASS')
-        else:
-            self.push(Node(string, 'node'))
+        elif isAtom(string):
+            self.push(Node(string)) # For now, allows < anything anything anything... >
 
-    def readingClassName(self, string):
-        debug('YES')
-        if len(self.currentExpression.content) > 0:
-            self.exit('Invalid syntax for class definition')
-        debug('HERE')
-        debug(string)
-        self.push(Node(string, 'keyword'))
-        self.branchOut('class-extra', newState='reading-class-extra')
+    def readingVarName(self, string):
+        if isAtom(string):
+            self.push(Node(string))
 
-    def readingClassExtra(self, string):
-        if string == ':':
-            self.stateStack[-1] = 'no-state'
-        else:
-            self.push(string)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     def inParenthesisExpression(self, string):

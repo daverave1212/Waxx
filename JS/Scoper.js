@@ -53,5 +53,10 @@ function scopify(expressionsWithIndentation) {
 }
 
 
-module.exports.Scope = Scope
-module.exports.scopify = scopify
+module.exports = {
+    Scope : Scope,
+    scopify : scopify
+}
+
+__requirer['Scoper'] = module.exports
+__requirer['./Scoper'] = module.exports

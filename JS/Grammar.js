@@ -19,5 +19,19 @@ module.exports = {
 
 
     isStringOperator(string){ return this.operators.includes(string) },
-    isAccessModifier(string){ return this.accessModifiers.includes(string) }
+    getTokenType(string) {        
+        if (string == '<') return '<'
+        if (string == '>') return '>'
+        if (string == '(') return '('
+        if (string == ')') return ')'
+        if (this.operators.includes(string)) return 'OPERATOR'
+        if (this.flowControlConditions.includes(string)) return 'FLOW-CONTROL-KEYWORD'
+        if (this.accessModifiers.includes(string)) return 'MODIFIER'
+        if (string == 'class') return 'CLASS'
+        return 'ATOM'
+    }
 }
+
+
+__requirer['Grammar'] = module.exports
+__requirer['./Grammar'] = module.exports

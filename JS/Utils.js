@@ -10,3 +10,6 @@ function spaces(nSpaces) {
 module.exports = {
     spaces : spaces
 }
+
+__requirer['Utils'] = module.exports
+__requirer['./Utils'] = module.exports
