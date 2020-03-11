@@ -1,3 +1,2 @@
 public static class Dogger:
-    
     var x : Int = 20
