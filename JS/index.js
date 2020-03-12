@@ -6,6 +6,7 @@ Splitter = require('./Splitter')
 Parenthesiser = require('./Parenthesiser')
 Collapser = require('./Collapser')
 Parser = require('./Parser').Parser
+Scoper = require('./Scoper')
 
 
 //fs = require('fs')
@@ -19,16 +20,16 @@ function go() {
     let stringLines = getLines()
 
     let wordLines = Splitter.splitLines(stringLines, Grammar.operators, Grammar.separators)
-    console.log(`Wordlines 0:`)
-    console.log(wordLines[0].toString())
-
     wordLines = Parenthesiser.parenthesise(wordLines)
     wordLines = Collapser.collapseParentheses(wordLines)
     wordLines = Parenthesiser.parenthesise(wordLines)
 
-    
+    let expressionsWithIndentation = parseWordLines(wordLines)
 
-    console.log(new Parser(wordLines[0]).parse())
+    let baseScope = Scoper.scopify(expressionsWithIndentation)
+    console.log(baseScope.toJsonObject())
+    console.log(baseScope.toString())
+
 }
 
 

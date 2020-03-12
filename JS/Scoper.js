@@ -1,5 +1,5 @@
 
-Uitls = require('./Utils')
+Utils = require('./Utils')
 
 class Scope {
     constructor(parent, expression, content, indentation=0) {
@@ -10,12 +10,23 @@ class Scope {
     }
 
     toString() {
-        let ret = Utils.spaces(this.indentation) + this.expression.toString() + '\n'
+        let ret = Utils.spaces(this.indentation)
+        if(this.expression != null) {
+            ret += this.expression.toString()
+        }
+        ret += '\n'
         if (this.content.length > 0) {
             ret += this.content.map( scope => scope.toString() ).join('\n')
             ret += '\n'
         }
         return ret
+    }
+
+    toJsonObject() {
+        return {
+            expression : this.expression,
+            content : this.content.map( scope => scope != null? scope.toJsonObject(): scope),
+        }
     }
 }
 
@@ -48,7 +59,6 @@ function scopify(expressionsWithIndentation) {
         }
 
     }
-
     return wrapperScope
 }
 

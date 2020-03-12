@@ -133,18 +133,15 @@ class Lexer {
 
     stepBlank() {
         if (isSpace(this.getCurrentChar())) {
-            console.log(`  ${this.getCurrentChar()} is space`)
+            // pass
         } else if (this.isAtAnOperator()) {
-            console.log(`  ${this.getCurrentChar()} is operator`)
             let endPos = this.currentCharIndex + this.theOperator.length
             this.pushWord(this.currentCharIndex, endPos)
             this.currentCharIndex += this.theOperator.length - 1
         } else if (this.isAtStringStart()) {
-            console.log(`  ${this.getCurrentChar()} is string`)
             this.start = this.currentCharIndex
             this.state = 'string'
         } else {
-            console.log(`  ${this.getCurrentChar()} is word`)
             this.start = this.currentCharIndex
             this.state = 'words'
         }

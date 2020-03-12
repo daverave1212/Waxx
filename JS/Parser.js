@@ -1,25 +1,10 @@
 
 Words = require('./Words')
 Grammar = require('./Grammar')
+Expression = require('./Expressions').Expression
 
 
-class Expression {
-    constructor(parent, content, type) {
-        this.parent = parent
-        this.content = content
-        this.accessModifiers = []
-        this.type = type
-    }
-    toString() { return '(' + this.content.map( elem => elem.toString() ).join(' ') + ')' }
-}
 
-class Node {
-    constructor(content, type='none') {
-        this.content = content
-        this.type = type
-    }
-    toString() { return this.content }
-}
 
 
 
@@ -34,7 +19,7 @@ class Parser {
     }
 
     exit(message) { console.log('Error: ' + message);  throw 'Exiting' }
-    error() { console.log(`Error in state ${this.getCurrentState} at word ${this.word.string} with type ${this.word.type}`)}
+    error() { throw `Error in state ${this.getCurrentState()} at word ${this.currentWord.string} with type ${this.currentWord.type}` }
     push(what) { this.currentExpression.content.push(what) }
     getCurrentState() { return this.stateStack[this.stateStack.length - 1] }
     setState(newState) { this.stateStack[this.stateStack.length - 1] = newState }
@@ -56,7 +41,9 @@ class Parser {
         this.currentExpression = this.currentExpression.parent
     }
 
-    wrapOver (newExpressionType, nextState) {   // Takes the current expression's content and modifiers, creates a new expression and puts those in the new expression; also changes state
+    wrapOver ({wrapperExpressionType, newExpressionType, nextState}) {   // Takes the current expression's content and modifiers, creates a new expression and puts those in the new expression; also changes state
+        if (wrapperExpressionType != null)
+            this.currentExpression.type = wrapperExpressionType
         let accessModifiers = this.currentExpression.accessModifiers
         let content = this.currentExpression.content
         this.currentExpression.accessModifiers = []
@@ -66,27 +53,19 @@ class Parser {
         this.currentExpression.content = [newExpression]
         this.currentExpression = newExpression
         this.stateStack.push(nextState)
+        console.log('this.currentExpression')
+        console.log(this.currentExpression)
     }
 
     getStateFunction(stateName) {   // Each state is mapped to a function (don't ask me why they are not just called the same)
-        let stateFunctions = {
-            'no-state'  : 'noState',
-            'in-root'   : 'inRoot',
-            'reading-modifiers' : 'readingModifiers',
-            'reading-type'  : 'readingType',
-            'expecting-generic' : 'expectingGeneric',
-            'reading-generic-inner' : 'readingGenericInner',
-            'reading-var-name' : 'readingVarName'
-        }
-        return stateFunctions[stateName]
+        return Utils.dashCaseToCamelCase(stateName)
     }
 
     parse () {
         for (let word of this.wordLine.words) {
             this.currentWord = word
             let state = this.getCurrentState()
-            console.log(`At state`)
-            console.log(state)
+            console.log(`Word: ${word}    State ${state}`)
             let functionName = this.getStateFunction(state)
             if (this[functionName] != null) {
                 this[functionName]()
@@ -94,14 +73,14 @@ class Parser {
                 this.exit('State ' + state + ' not handled.')
             }
         }
-        return this.root
+        return { expression: this.root, indentation: this.wordLine.indentation }
     }
 
     /* States */
 
-    noState () { this.exit(`No state for word ${string} of type ${this.currentWord.type}`) }
+    noState() { this.error() }
 
-    inRoot () {
+    inRoot() {
         switch (this.currentWord.type) {
             case 'MODIFIER':
                 this.redirectToState('reading-modifiers')
@@ -110,7 +89,7 @@ class Parser {
         }
     }
 
-    readingModifiers () {
+    readingModifiers() {
         switch (this.currentWord.type) {
             case 'MODIFIER':
                 this.currentExpression.accessModifiers.push(this.currentWord.string)
@@ -118,11 +97,59 @@ class Parser {
             case 'ATOM':
                 this.redirectToState('reading-type')
                 break
+            case 'CLASS':
+                this.redirectToState('reading-class-declaration')
+                break
+            case 'FUNC':
+                this.redirectToState('reading-function-declaration')
             default: this.error()
         }
     }
 
-    readingType () {
+    readingFunctionDeclaration() {
+        switch (this.currentWord.type) {
+            case 'FUNC':
+                this.branchOut('function-declaration', 'expecting-function-generic')
+                break
+            default: this.error()
+        }
+    }
+
+    readingClassDeclaration() {
+        switch (this.currentWord.type) {
+            case 'CLASS':
+                this.push(this.currentWord.string)
+                this.setState('expecting-class-generic')
+                break
+            default: this.error()
+        }
+    }
+
+    expectingFunctionGeneric() {
+        switch (this.currentWord.type) {
+            case '<':
+                this.branchOut('function-generic', 'reading-generic-inner')
+                break
+            case 'ATOM':
+                this.redirectToState('reading-function-name')
+                break
+            default: this.error()
+        }
+    }
+
+    expectingClassGeneric() {
+        switch(this.currentWord.type) {
+            case '<':
+                this.branchOut('class-generic', 'reading-generic-inner')
+                break
+            case 'ATOM':
+                this.redirectToState('reading-class-name')
+                break
+            default: this.error()
+        }
+    }
+
+    readingType() {
         switch (this.currentWord.type) {
             case 'ATOM':
                 this.push(this.currentWord.string)
@@ -132,7 +159,7 @@ class Parser {
         }
     }
 
-    expectingGeneric () {
+    expectingGeneric() {
         switch (this.currentWord.type) {
             case '<':
                 this.branchOut('generic-inner', 'reading-generic-inner')
@@ -144,7 +171,7 @@ class Parser {
         }
     }
 
-    readingGenericInner () {
+    readingGenericInner() {
         switch (this.currentWord.type) {
             case '>':
                 this.brateIn()
@@ -156,7 +183,17 @@ class Parser {
         }
     }
 
-    readingVarName () {
+    readingVarName() {
+        switch (this.currentWord.type) {
+            case 'ATOM':
+                this.push(this.currentWord.string)
+                this.setState('expecting-attribution-equals')
+                break
+            default: this.error()            
+        }
+    }
+
+    readingClassName() {
         switch (this.currentWord.type) {
             case 'ATOM':
                 this.push(this.currentWord.string)
@@ -166,8 +203,45 @@ class Parser {
         }
     }
 
+    readingFunctionName() {
+        switch (this.currentWord.type) {
+            case 'ATOM':
+                this.push(this.currentWord.string)
+                this.setState('no-state')
+                break
+            default: this.error()            
+        }
+    }
+
+    expectingAttributionEquals() {
+        switch (this.currentWord.type) {
+            case '=':
+                this.wrapOver({
+                    wrapperExpressionType: 'attribution',
+                    newExpressionType: this.currentExpression.type,
+                    nextState: 'none'   // No need for a new state
+                })
+                this.brateIn()
+                this.branchOut('attribution-right', 'reading-attribution-right')
+                break
+            default:
+                this.error()
+        }
+    }
+
+    readingAttributionRight() {
+        switch (this.currentWord.type) {
+            default: this.push(this.currentWord.string)
+        }
+    }
+
 }
 
+// Takes a list of WordLine
+// Returns a list of {expression, indentation}
+function parseWordLines(wordLines){
+    return wordLines.map( line => (new Parser(line).parse()))
+}
 
 module.exports = { Parser : Parser }
 __requirer['Parser'] = module.exports
