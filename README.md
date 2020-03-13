@@ -51,8 +51,7 @@ reading-function-name:
     ATOM        -> ...
 
 expecting-attribution-equals:
-    =           w> {wexp: attribution, nexp: SAME, nst: none} <= => reading-attribution-right
-
+    =           w> {wexp: attribution, nexp: SAME, nst: none} <= => reading-normal-expression
 
 
 
@@ -65,13 +64,13 @@ Tentative below:
 reading-par-expression:
     )           <=
     (           => reading-par-expression
-    ,           w> reading-sub-expression <= => reading-sub-expression
+    ,           w> {wexp: parenthesis-tuple, nexp: expression, nst: none} <= => reading-par-expression:sub-expression
     _           -> reading-par-expression
 
-reading-sub-expression:
+reading-par-expression:sub-expression:
     (           => reading-par-expression
-    ,           <= => reading-sub-expression
-    )           <= <=
+    ,           <= => reading-par-expression:sub-expression
+    )           <= >> reading-par-expression
 
 
 
@@ -81,8 +80,6 @@ Legend:
     >>  Redirect to state
     <=  brateIn (branch in and state back)
     w>  wrapOver (wrap the current expression in another)
-    s=  set state
-    e=  set expression type
 
 
 
@@ -106,4 +103,4 @@ Expressions:
     generic:
         content = [type, type, type...]
     variable-declaration:
-        content = [type, name]
+        content = [type, *generic, name]
