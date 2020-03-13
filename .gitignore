@@ -2,3 +2,4 @@ __pycache__/*
 __pycache__
 *.pyc
 JS/node_modules
+waxx-node/JS/node_modules
