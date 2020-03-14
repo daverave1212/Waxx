@@ -26,7 +26,7 @@ function parenthesise(wordLines) {
 
 
 function wordsToExpression(words) {
-    let expression = new Expression(null, [], 'expression')
+    let expression = new Expression(null, [], 'EXPRESSION')
     for (let i = 0; i<words.length; i++) {
         let word = words[i]
         if (word.hasPair()) {

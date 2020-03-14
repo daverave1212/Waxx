@@ -5,23 +5,25 @@ import { Expression } from './Expressions.js'
 import { dashCaseToCamelCase } from './Utils.js'
 
 class Parser {
-    constructor(givenExpression) {
+    constructor(givenExpression, startAt='in-root') {
         this.nodes = givenExpression.content
         this.root = new Expression(givenExpression.parent, [], givenExpression.type)  // WARNING: Make sure the parent is ok!
         this.currentExpression = this.root
-        this.stateStack = ['in-root']
+        this.stateStack = [startAt]
         this.currentNode = null     // Set in the for in parse
+
+        this._stateHistory = [startAt]
     }
 
     exit(message) { console.log('Error: ' + message);  throw 'Exiting' }
-    error() { throw `Error in state ${this.getCurrentState()} at node ${this.currentNode.content} with type ${this.currentNode.type}` }
+    error() { throw `Error in state ${this.getCurrentState()} at node "${this.currentNode.content}" with type ${this.currentNode.type}; State history: ${this._stateHistory}` }
     push(what) { this.currentExpression.content.push(what) }
     getCurrentState() { return this.stateStack[this.stateStack.length - 1] }
-    setState(newState) { this.stateStack[this.stateStack.length - 1] = newState }
+    setState(newState) { this.stateStack[this.stateStack.length - 1] = newState; this._stateHistory.push(newState) }
 
     redirectToState(toState) {
         this.setState(toState)
-        this[this.getStateFunction(toState)]()
+        this [this.getStateObjectName(toState)] [this.currentNode.type] ()
     }
 
     branchOut (newExpressionType, newState=null) {  // Goes up 1 level and optionally 1 state
@@ -52,7 +54,7 @@ class Parser {
         console.log(this.currentExpression)
     }
 
-    getStateFunction(stateName) {   // Each state is mapped to a function (don't ask me why they are not just called the same)
+    getStateObjectName(stateName) {   // Each state is mapped to a function (don't ask me why they are not just called the same)
         return dashCaseToCamelCase(stateName)
     }
 
@@ -60,171 +62,132 @@ class Parser {
         for (let node of this.nodes) {
             this.currentNode = node
             let state = this.getCurrentState()
-            console.log(`Node: ${node.content}    State ${state}`)
-            let functionName = this.getStateFunction(state)
+            console.log(`Node: '${node.content}'\tType: ${node.type}\tState ${state}`)
+            let functionName = this.getStateObjectName(state)
             if (this[functionName] != null) {
-                this[functionName]()
+                if (this[functionName][node.type] != null) {
+                    this[functionName][node.type]()
+                } else if (this[functionName]['default'] != null) {
+                    this[functionName]['default']()
+                } else {
+                    this.error()
+                }                
             } else {
                 this.exit('State ' + state + ' not handled.')
             }
         }
+        console.log('')
+        console.log('')
         return this.root
     }
 
     /* States */
 
-    noState() { this.error() }
+    noState = {}
 
-    inRoot() {
-        switch (this.currentNode.type) {
-            case 'MODIFIER':
-                this.redirectToState('reading-modifiers')
-                break
-            default: this.error()
+    inRoot = {
+        'MODIFIER': () => this.redirectToState('reading-modifiers')
+    }
+
+    readingModifiers = {
+        'MODIFIER': () => this.currentExpression.accessModifiers.push(this.currentNode.content),
+        'ATOM':     () => this.redirectToState('reading-type'),
+        'CLASS':    () => this.redirectToState('reading-class-declaration'),
+        'FUNC':     () => this.redirectToState('reading-function-declaration')
+    }
+
+    readingFunctionDeclaration = {
+        'FUNC':     () => {
+            this.currentExpression.type = 'function-declaration'
+            this.setState('expecting-function-generic')
         }
     }
 
-    readingModifiers() {
-        switch (this.currentNode.type) {
-            case 'MODIFIER':
-                this.currentExpression.accessModifiers.push(this.currentNode.content)
-                break
-            case 'ATOM':
-                this.redirectToState('reading-type')
-                break
-            case 'CLASS':
-                this.redirectToState('reading-class-declaration')
-                break
-            case 'FUNC':
-                this.redirectToState('reading-function-declaration')
-            default: this.error()
+    readingClassDeclaration = {
+        'CLASS':    () => {
+            this.push(this.currentNode.content)
+            this.setState('expecting-class-generic')
         }
     }
 
-    readingFunctionDeclaration() {
-        switch (this.currentNode.type) {
-            case 'FUNC':
-                this.branchOut('function-declaration', 'expecting-function-generic')
-                break
-            default: this.error()
+    expectingFunctionGeneric = {
+        '<':        () => this.branchOut('function-generic', 'reading-generic-inner'),
+        'ATOM':     () => this.redirectToState('reading-function-name')
+    }
+
+    expectingClassGeneric = {
+        '<':        () => this.branchOut('class-generic', 'reading-generic-inner'),
+        'ATOM':     () => this.redirectToState('reading-class-name')
+    }
+
+    readingType = {
+        'ATOM':     () => {
+            this.push(this.currentNode.content)
+            this.setState('expecting-generic')
         }
     }
 
-    readingClassDeclaration() {
-        switch (this.currentNode.type) {
-            case 'CLASS':
-                this.push(this.currentNode.content)
-                this.setState('expecting-class-generic')
-                break
-            default: this.error()
+    expectingGeneric = {
+        '<':        () => this.branchOut('generic-expression', 'reading-generic-inner'),
+        'ATOM':     () => this.redirectToState('reading-var-name')
+    }
+
+    readingGenericInner = {
+        '>':        () => this.brateIn(),
+        'ATOM':     () => this.push(this.currentNode.content)
+    }
+
+    readingVarName = {
+        'ATOM':     () => {
+            this.push(this.currentNode.content)
+            this.setState('expecting-attribution-equals')
         }
     }
 
-    expectingFunctionGeneric() {
-        switch (this.currentNode.type) {
-            case '<':
-                this.branchOut('function-generic', 'reading-generic-inner')
-                break
-            case 'ATOM':
-                this.redirectToState('reading-function-name')
-                break
-            default: this.error()
+    readingClassName = {
+        'ATOM':     () => {
+            this.push(this.currentNode.content)
+            this.setState('no-state')
         }
     }
 
-    expectingClassGeneric() {
-        switch(this.currentNode.type) {
-            case '<':
-                this.branchOut('class-generic', 'reading-generic-inner')
-                break
-            case 'ATOM':
-                this.redirectToState('reading-class-name')
-                break
-            default: this.error()
+    readingFunctionName = {
+        'ATOM':     () => {
+            this.push(this.currentNode.content)
+            this.setState('expecting-function-parameters')
         }
     }
 
-    readingType() {
-        switch (this.currentNode.type) {
-            case 'ATOM':
-                this.push(this.currentNode.content)
-                this.setState('expecting-generic')
-                break
-            default: this.error()
+    expectingFunctionParameters = {
+        'EXPRESSION':   () => {
+            this.push(new Parser(this.currentNode, 'reading-normal-expression').parse())
+            this.setState('expecting-colon')
         }
     }
 
-    expectingGeneric() {
-        switch (this.currentNode.type) {
-            case '<':
-                this.branchOut('generic-expression', 'reading-generic-inner')
-                break
-            case 'ATOM':
-                this.redirectToState('reading-var-name')
-                break
-            default: this.error()
+    expectingColon = {
+        'COLON':    () => this.setState('no-state')
+    }
+
+    expectingAttributionEquals = {
+        '=':        () => {
+            this.wrapOver({
+                wrapperExpressionType: 'attribution',
+                newExpressionType: this.currentExpression.type,
+                nextState: 'none'   // No need for a new state
+            })
+            this.brateIn()
+            this.branchOut('attribution-right', 'reading-normal-expression')
         }
     }
 
-    readingGenericInner() {
-        switch (this.currentNode.type) {
-            case '>':
-                this.brateIn()
-                break
-            case 'ATOM':
-                this.push(this.currentNode.content)
-                break
-            default: this.error()
+    readingNormalExpression = {
+        'default':     () => {
+            this.push(this.currentNode.content)
         }
     }
 
-    readingVarName() {
-        switch (this.currentNode.type) {
-            case 'ATOM':
-                this.push(this.currentNode.content)
-                this.setState('expecting-attribution-equals')
-                break
-            default: this.error()            
-        }
-    }
-
-    readingClassName() {
-        switch (this.currentNode.type) {
-            case 'ATOM':
-                this.push(this.currentNode.content)
-                this.setState('no-state')
-                break
-            default: this.error()            
-        }
-    }
-
-    readingFunctionName() {
-        switch (this.currentNode.type) {
-            case 'ATOM':
-                this.push(this.currentNode.content)
-                this.setState('no-state')
-                break
-            default: this.error()            
-        }
-    }
-
-    expectingAttributionEquals() {
-        switch (this.currentNode.type) {
-            case '=':
-                this.wrapOver({
-                    wrapperExpressionType: 'attribution',
-                    newExpressionType: this.currentExpression.type,
-                    nextState: 'none'   // No need for a new state
-                })
-                this.brateIn()
-                this.branchOut('attribution-right', 'reading-attribution-right')
-                break
-            default:
-                this.error()
-        }
-    }
-
-    readingAttributionRight() {
+    readingNormalExpression() {
         switch (this.currentNode.type) {
             default: this.push(this.currentNode.content)
         }

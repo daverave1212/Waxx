@@ -29,6 +29,7 @@ export function getTokenType(string) {
     if (string == '(') return '('
     if (string == ')') return ')'
     if (string == '=') return '='
+    if (string == ':') return 'COLON'
     if (this.operators.includes(string)) return 'OPERATOR'
     if (this.flowControlConditions.includes(string)) return 'FLOW-CONTROL-KEYWORD'
     if (this.accessModifiers.includes(string)) return 'MODIFIER'

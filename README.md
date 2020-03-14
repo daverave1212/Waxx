@@ -24,7 +24,7 @@ reading-class-declaration:
 
 expecting-function-generic:
     <           => reading-generic-inner
-    ATOM        => reading-function-name
+    ATOM        >> reading-function-name
 
 expecting-class-generic:
     <           => reading-generic-inner
@@ -48,7 +48,13 @@ reading-class-name:
     ATOM        -> ...
 
 reading-function-name:
-    ATOM        -> ...
+    ATOM        -> expecting-function-parameters
+
+expecting-function-parameters:
+    EXPRESSION  -> expecting-colon
+
+expecting-colon:
+    COLON       -> no-sate
 
 expecting-attribution-equals:
     =           w> {wexp: attribution, nexp: SAME, nst: none} <= => reading-normal-expression
@@ -80,7 +86,6 @@ Legend:
     >>  Redirect to state
     <=  brateIn (branch in and state back)
     w>  wrapOver (wrap the current expression in another)
-
 
 
 
