@@ -8,7 +8,7 @@ export let separators = [
     ['/*', '*/']
 ]
 
-export let flowControlConditions = ['if', 'else', 'elif', 'while']
+export let flowControlConditions = ['if', 'else', 'elif', 'while', 'for', 'switch']
 
 export let accessModifiers = [
     'public',
@@ -29,9 +29,9 @@ export function getTokenType(string) {
     if (string == '(') return '('
     if (string == ')') return ')'
     if (string == '=') return '='
-    if (string == ':') return 'COLON'
+    if (string == ':') return ':'
     if (this.operators.includes(string)) return 'OPERATOR'
-    if (this.flowControlConditions.includes(string)) return 'FLOW-CONTROL-KEYWORD'
+    if (this.flowControlConditions.includes(string)) return 'FLOWCONTROL'
     if (this.accessModifiers.includes(string)) return 'MODIFIER'
     if (string == 'class') return 'CLASS'
     if (string == 'func') return 'FUNC'
