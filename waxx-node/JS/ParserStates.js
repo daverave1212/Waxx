@@ -5,8 +5,21 @@ export default class ParserStates {
 
     noState = {}
 
+    readingRoot = {
+        'MODIFIER':     () => this.redirectToState('reading-modifiers'),
+        'FLOWCONTROL':  () => {
+            this.push(this.currentNode.content)
+            this.branchOut('flow-control-expression', 'reading-flow-control-expression')
+        },
+        'default':      () => this.redirectToState('reading-normal-expression')
+    }
+
     readingNormalExpression = {
-        'MODIFIER': () => this.redirectToState('reading-modifiers'),
+        'default':      () => this.push(this.currentNode.content)
+    }
+
+    readingFlowControlExpression = {
+        ':':        () => { this.brateIn(); this.branchOut('normal-expression', 'reading-normal-expression') },
         'default':  () => this.push(this.currentNode.content)
     }
 
@@ -81,7 +94,7 @@ export default class ParserStates {
 
     expectingFunctionParameters = {
         'EXPRESSION':   () => {
-            this.push(new Parser(this.currentNode, 'reading-normal-expression').parse())
+            this.push(new Parser(this.currentNode, 'reading-function-parameters').parse())
             this.setState('expecting-colon')
         }
     }
@@ -100,5 +113,9 @@ export default class ParserStates {
             this.brateIn()
             this.branchOut('attribution-right', 'reading-normal-expression')
         }
+    }
+
+    readingFunctionParameters = {
+        'default':      () => this.push(this.currentNode.content)
     }
 }

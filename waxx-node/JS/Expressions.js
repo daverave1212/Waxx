@@ -14,16 +14,16 @@ class Expression {
         let contentStrings = this.content.map( elem => elem.toString() )
         switch (this.type) {
             case 'expression':
-                return mods + '(' + contentStrings.join(' ') + ')'
+                return '(' + mods + contentStrings.join(' ') + ')'
             case 'attribution':
                 if (contentStrings.length == 0) throw 'Error: Attribution expression has no content.'
                 if (contentStrings.length == 1) throw 'Error: Attribution expression has no right side content.'
                 if (contentStrings.length > 2)  throw 'Error: Attribution expression has too many content elements.'
                 if (this.accessModifiers.length > 0) throw 'Error: Attribution is not supposed to have access modifiers ' + mods
-                return mods + '(' + contentStrings[0] + ' = ' + contentStrings[1] + ')'
+                return '(' + mods + contentStrings[0] + ' = ' + contentStrings[1] + ')'
             default:
                 console.log(`WARNING: Expression type '${this.type}' not handled. Returning as normal expression`)
-                return mods + '(' + contentStrings.join(' ') + ')'
+                return '(' + mods + contentStrings.join(' ') + ')'
         }
     }
 }

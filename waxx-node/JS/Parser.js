@@ -6,7 +6,7 @@ import { Expression } from './Expressions.js'
 import { dashCaseToCamelCase } from './Utils.js'
 
 class Parser extends ParserStates {
-    constructor(givenExpression, startAt='reading-normal-expression') {
+    constructor(givenExpression, startAt='reading-root') {
         super()
         this.nodes = givenExpression.content
         this.root = new Expression(givenExpression.parent, [], givenExpression.type)  // WARNING: Make sure the parent is ok!
@@ -25,7 +25,7 @@ class Parser extends ParserStates {
 
     redirectToState(toState) {
         this.setState(toState)
-        this [this.getStateObjectName(toState)] [this.currentNode.type] ()
+        this.doState(this.getStateObjectName(toState), this.currentNode.type)
     }
 
     branchOut (newExpressionType, newState=null) {  // Goes up 1 level and optionally 1 state
@@ -58,23 +58,27 @@ class Parser extends ParserStates {
 
     getStateObjectName(stateName) { return dashCaseToCamelCase(stateName) } // Each state is mapped to a function (don't ask me why they are not just called the same)
 
+    doState(functionName, nodeType) {
+        if (this[functionName] != null) {
+            if (this[functionName][nodeType] != null) {
+                this[functionName][nodeType]()
+            } else if (this[functionName]['default'] != null) {
+                this[functionName]['default']()
+            } else {
+                this.error()
+            }                
+        } else {
+            this.exit('State ' + state + ' not handled.')
+        }
+    }
+
     parse () {
         for (let node of this.nodes) {
             this.currentNode = node
             let state = this.getCurrentState()
             console.log(`Node: '${node.content}'\tType: ${node.type}\tState ${state}`)
             let functionName = this.getStateObjectName(state)
-            if (this[functionName] != null) {
-                if (this[functionName][node.type] != null) {
-                    this[functionName][node.type]()
-                } else if (this[functionName]['default'] != null) {
-                    this[functionName]['default']()
-                } else {
-                    this.error()
-                }                
-            } else {
-                this.exit('State ' + state + ' not handled.')
-            }
+            this.doState(functionName, node.type)
         }
         console.log('')
         console.log('')
