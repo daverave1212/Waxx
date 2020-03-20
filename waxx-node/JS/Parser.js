@@ -1,7 +1,7 @@
 
 import ParserStates from './ParserStates.js'
-import * as Words from './Words.js'
-import * as Grammar from './Grammar.js'
+// import * as Words from './Words.js'
+// import * as Grammar from './Grammar.js'
 import { Expression } from './Expressions.js'
 import { dashCaseToCamelCase } from './Utils.js'
 
@@ -59,10 +59,13 @@ class Parser extends ParserStates {
     getStateObjectName(stateName) { return dashCaseToCamelCase(stateName) } // Each state is mapped to a function (don't ask me why they are not just called the same)
 
     doState(functionName, nodeType) {
+        console.log(`Doing state ${functionName} for node type ${nodeType}`)
         if (this[functionName] != null) {
             if (this[functionName][nodeType] != null) {
+                console.log('Hmm')
                 this[functionName][nodeType]()
             } else if (this[functionName]['default'] != null) {
+                console.log('Huh')
                 this[functionName]['default']()
             } else {
                 this.error()

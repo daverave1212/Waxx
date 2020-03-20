@@ -11,10 +11,14 @@ export default class ParserStates {
             this.push(this.currentNode.content)
             this.branchOut('flow-control-expression', 'reading-flow-control-expression')
         },
-        'default':      () => this.redirectToState('reading-normal-expression')
+        'default':      () => {
+            console.log(`Redirecting word ${this.currentNode.content} to reading-normal-expression`)
+            this.redirectToState('reading-normal-expression')
+        }
     }
 
     readingNormalExpression = {
+        'EXPRESSION':   () => this.push(this.currentNode),
         'default':      () => this.push(this.currentNode.content)
     }
 
@@ -25,9 +29,16 @@ export default class ParserStates {
 
     readingModifiers = {
         'MODIFIER': () => this.currentExpression.accessModifiers.push(this.currentNode.content),
-        'ATOM':     () => this.redirectToState('reading-type'),
+        'VAR':      () => this.redirectToState('reading-var'),
         'CLASS':    () => this.redirectToState('reading-class-declaration'),
         'FUNC':     () => this.redirectToState('reading-function-declaration')
+    }
+
+    readingVar = {
+        'VAR':      () => {
+            this.currentExpression.type = 'variable-declaration'
+            this.setState('reading-var-name')
+        }
     }
 
     readingFunctionDeclaration = {
@@ -74,8 +85,25 @@ export default class ParserStates {
     readingVarName = {
         'ATOM':     () => {
             this.push(this.currentNode.content)
-            this.setState('expecting-attribution-equals')
+            this.setState('expecting-var-type')
         }
+    }
+
+    expectingVarType = {
+        ':':        () => this.setState('reading-var-type'),
+        '=':        () => this.redirectToState('expecting-attribution-equals')
+    }
+
+    readingVarType = {
+        'ATOM':     () => {
+            this.push(this.currentNode.content)
+            this.setState('expecting-var-type-generic-or-equals')
+        }
+    }
+
+    expectingVarTypeGenericOrEquals = {
+        '=':        () => this.redirectToState('expecting-attribution-equals'),
+        '<':        () => this.branchOut('generic-inner', 'reading-generic-inner')
     }
 
     readingClassName = {
@@ -104,7 +132,7 @@ export default class ParserStates {
     }
 
     expectingAttributionEquals = {
-        '=':        () => {
+        '=':    () => {
             this.wrapOver({
                 wrapperExpressionType: 'attribution',
                 newExpressionType: this.currentExpression.type,

@@ -14,6 +14,7 @@ class Expression {
         let contentStrings = this.content.map( elem => elem.toString() )
         switch (this.type) {
             case 'expression':
+            case 'EXPRESSION':
                 return '(' + mods + contentStrings.join(' ') + ')'
             case 'attribution':
                 if (contentStrings.length == 0) throw 'Error: Attribution expression has no content.'

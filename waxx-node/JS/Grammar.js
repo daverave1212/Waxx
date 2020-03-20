@@ -30,6 +30,7 @@ export function getTokenType(string) {
     if (string == ')') return ')'
     if (string == '=') return '='
     if (string == ':') return ':'
+    if (string == 'o' || string == 'var') return 'VAR'
     if (this.operators.includes(string)) return 'OPERATOR'
     if (this.flowControlConditions.includes(string)) return 'FLOWCONTROL'
     if (this.accessModifiers.includes(string)) return 'MODIFIER'
