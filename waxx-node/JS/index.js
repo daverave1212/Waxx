@@ -6,6 +6,7 @@ import * as Parenthesiser from './Parenthesiser.js'
 import * as Collapser from './Collapser.js'
 import * as Parser from './Parser.js'
 import * as Scoper from './Scoper.js'
+import * as Expressizer from './Expressizer.js'
 
 
 
@@ -26,11 +27,12 @@ export function go() {
     wordLines = Collapser.collapseParentheses(wordLines)
     wordLines = Parenthesiser.parenthesise(wordLines)
 
-    let expressionsWithIndentation = Parenthesiser.expressizeWordLinesByParentheses(wordLines)
+    let expressionsWithIndentation = Expressizer.expressizeWordLinesByParentheses(wordLines)
+
 
     let baseScope = Scoper.scopify(expressionsWithIndentation)
     Parser.parseScope(baseScope)
-    console.log({baseScope})
+    console.log(baseScope.content[0].expression)
     console.log(baseScope.toString())
 
 }

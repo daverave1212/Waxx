@@ -6,77 +6,77 @@ Waxx language
 
 
 
+$-root:
+    MODIFIER    >> $-modifiers
+    FLOWCONTROL => $-flow-control-expression
+    default     >> $-normal-expression
+    OVERHEAD    -> $-overhead-path -> $-no-state
 
-root:
-    MODIFIER    >> reading-modifiers
+$-normal-expression:
+    default     -> $-normal-expression
 
-reading-modifiers:
-    MODIFIER    -> reading-modifiers
-    ATOM        >> reading-type
-    CLASS       >> reading-class-declaration
-    FUNC        >> reading-function-declaration
+$-flow-control-expression:
+    :           <= => $-normal-expression
+    default     -> $-flow-control-expression
 
-reading-function-declaration:
-    FUNC        -> expecting-function-generic
+$-modifiers:
+    MODIFIER    -> $-modifiers
+    VAR         >> $-var
+    CLASS       >> $-class-declaration
+    FUNC        >> $-function-declaration
 
-reading-class-declaration:
-    CLASS       -> expecting-class-generic
+$-var:
+    VAR         -> $-var-name
 
-expecting-function-generic:
-    <           => reading-generic-inner
-    ATOM        >> reading-function-name
+$-var-name:
+    ATOM        -> $-expecting-var-type
 
-expecting-class-generic:
-    <           => reading-generic-inner
-    ATOM        => reading-class-name
+$expecting-var-type:
+    :           -> $-var-type
+    =           >> $-expecting-attribution-equals
 
-reading-type:
-    ATOM        -> expecting-generic
+$-var-type:
+    ATOM        -> $-expecting-var-type-generic-or-equals
 
-expecting-generic:
-    <           => reading-generic-inner
-    ATOM        >> reading-var-name
+$-expecting-var-type-generic-or-equals:
+    =               >> $-expecting-attribution-equals
+    INDEXEXPRESSION -> $-expecting-var-type-generic-or-equals
 
-reading-generic-inner:
-    >           <=
-    ATOM        -> reading-generic-inner
+$-function-declaration:
+    FUNC        -> $-expecting-function-generic
 
-reading-var-name:
-    ATOM        -> expecting-attribution-equals
+$-class-declaration:
+    CLASS       -> $-expecting-class-generic
 
-reading-class-name:
+$-expecting-function-generic:
+    INDEXEXPRESSION -> $-expecting-function-generic
+    ATOM            >> $-function-name
+
+$-class-generic:
+    INDEXEXPRESSION -> $-class-generic
+    ATOM            => $-class-name
+
+$-class-name:
     ATOM        -> ...
 
-reading-function-name:
-    ATOM        -> expecting-function-parameters
+$-function-name:
+    ATOM        -> $-expecting-function-parameters
 
-expecting-function-parameters:
-    EXPRESSION  -> expecting-colon
+$-expecting-function-parameters:
+    PAREXPRESSION  ---> $-function-parameters -> $-expecting-colon
 
-expecting-colon:
-    COLON       -> no-sate
+$-expecting-colon:
+    :           -> $-normal-expression
 
-expecting-attribution-equals:
-    =           w> {wexp: attribution, nexp: SAME, nst: none} <= => reading-normal-expression
-
-
+$-expecting-attribution-equals:
+    =           w> {wexp: attribution, nexp: SAME, nst: none} <= => $-normal-expression
 
 
 
-Tentative below:
-...
-    (           => reading-par-expression
 
-reading-par-expression:
-    )           <=
-    (           => reading-par-expression
-    ,           w> {wexp: parenthesis-tuple, nexp: expression, nst: none} <= => reading-par-expression:sub-expression
-    _           -> reading-par-expression
 
-reading-par-expression:sub-expression:
-    (           => reading-par-expression
-    ,           <= => reading-par-expression:sub-expression
-    )           <= >> reading-par-expression
+
+
 
 
 
@@ -86,6 +86,8 @@ Legend:
     >>  Redirect to state
     <=  brateIn (branch in and state back)
     w>  wrapOver (wrap the current expression in another)
+    s=  set state
+    ---> parse that expression recursively starting with state
 
 
 
@@ -109,3 +111,14 @@ Expressions:
         content = [type, type, type...]
     variable-declaration:
         content = [type, *generic, name]
+
+
+
+
+
+
+
+
+EXPRESSION: MODIFIER VAR ATOM : TYPE
+
+ATTRIBUTION:    EXPRESSION = EXPRESSION

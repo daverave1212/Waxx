@@ -6,7 +6,7 @@ import { Expression } from './Expressions.js'
 import { dashCaseToCamelCase } from './Utils.js'
 
 class Parser extends ParserStates {
-    constructor(givenExpression, startAt='reading-root') {
+    constructor(givenExpression, startAt='$-root') {
         super()
         this.nodes = givenExpression.content
         this.root = new Expression(givenExpression.parent, [], givenExpression.type)  // WARNING: Make sure the parent is ok!
@@ -56,7 +56,10 @@ class Parser extends ParserStates {
         console.log(this.currentExpression)
     }
 
-    getStateObjectName(stateName) { return dashCaseToCamelCase(stateName) } // Each state is mapped to a function (don't ask me why they are not just called the same)
+    getStateObjectName(stateName) {
+        console.log(stateName)
+        return '$' + dashCaseToCamelCase(stateName.substring(2))
+    } // Each state is mapped to a function (don't ask me why they are not just called the same)
 
     doState(functionName, nodeType) {
         console.log(`Doing state ${functionName} for node type ${nodeType}`)
@@ -71,7 +74,7 @@ class Parser extends ParserStates {
                 this.error()
             }                
         } else {
-            this.exit('State ' + state + ' not handled.')
+            this.exit('State ' + functionName + ' not handled.')
         }
     }
 
@@ -83,8 +86,6 @@ class Parser extends ParserStates {
             let functionName = this.getStateObjectName(state)
             this.doState(functionName, node.type)
         }
-        console.log('')
-        console.log('')
         return this.root
     }
 

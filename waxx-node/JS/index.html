@@ -16,17 +16,30 @@
     <textarea id="TextArea" rows="40" cols="80">
 
 
-        public class Dogger
+overhead 'overhead/imports.haxe'
 
-        public static var x
+public class Dogger
+
+    o name = 'Daisy'
+    o owner : Hooman
+    o friends : Array[Int]
+
+    func new(name : String, owner : Hooman)
+        this.name = name
+        this.owner = owner
+        if name is 'Daisy'
+            this.name = 'Old ' + name
+        else: bark()
+
+    private func bark(): trace("RURURU")
+
+    `function meow() {
+        trace('Meow I am haxe code!');
+    }`
+
     
-        if x == 20:
-          return true
     
-        private inline func<String> go(int a, int b):
-            public return 20
-    
-    
+   
         
     </textarea>
     <br>

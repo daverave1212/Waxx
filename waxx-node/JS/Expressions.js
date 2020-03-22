@@ -7,15 +7,37 @@ class Expression {
         this.content = content
         this.accessModifiers = []
         this.type = type
+        this.isTuple = false
     }
     toString() {
         let mods = this.accessModifiers.join(' ')
-        if (mods.length > 0) mods = '[' + mods + '] '
+        if (this.accessModifiers.length > 0) mods = '[' + mods + '] '
+        if (this.isTuple && this.accessModifiers.length > 0) {
+            console.log('Appending. Acces mods:')
+            console.log(this.accessModifiers)
+            mods += ' || '
+        }
         let contentStrings = this.content.map( elem => elem.toString() )
         switch (this.type) {
             case 'expression':
             case 'EXPRESSION':
-                return '(' + mods + contentStrings.join(' ') + ')'
+                if (this.isTuple) {
+                    return '(' + mods + contentStrings.join(', ') + ')'
+                } else {
+                    return '(' + mods + contentStrings.join(' ') + ')'
+                }
+            case 'PAREXPRESSION':
+                if (this.isTuple) {
+                    return '(' + mods + contentStrings.join(', ') + ')'
+                } else {
+                    return '(' + mods + contentStrings.join(' ') + ')'
+                }
+            case 'INDEXEXPRESSION':
+                if (this.isTuple) {
+                    return '[' + mods + contentStrings.join(', ') + ']'
+                } else {
+                    return '[' + mods + contentStrings.join(' ') + ']'
+                }
             case 'attribution':
                 if (contentStrings.length == 0) throw 'Error: Attribution expression has no content.'
                 if (contentStrings.length == 1) throw 'Error: Attribution expression has no right side content.'
