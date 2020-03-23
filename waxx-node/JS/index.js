@@ -7,6 +7,7 @@ import * as Collapser from './Collapser.js'
 import * as Parser from './Parser.js'
 import * as Scoper from './Scoper.js'
 import * as Expressizer from './Expressizer.js'
+import * as Outputter from './Outputter.js'
 
 
 
@@ -20,8 +21,6 @@ function getLines(){
 export function go() {
     let stringLines = getLines()
 
-    console.log(Grammar.operators)
-
     let wordLines = Splitter.splitLines(stringLines, Grammar.operators, Grammar.separators)
     wordLines = Parenthesiser.parenthesise(wordLines)
     wordLines = Collapser.collapseParentheses(wordLines)
@@ -32,9 +31,16 @@ export function go() {
 
     let baseScope = Scoper.scopify(expressionsWithIndentation)
     Parser.parseScope(baseScope)
-    console.log(baseScope.content[0].expression)
+    console.log(baseScope.content)
     console.log(baseScope.toString())
 
+    let myExpr = baseScope.content[0].expression
+    console.log('let code...')
+    //let code = Outputter.outputNode(myExpr)
+    let code = Outputter.outputScope(baseScope)
+    document.getElementById('Output').innerHTML = code
+
+    console.log('Code: ' + code)
 }
 
 

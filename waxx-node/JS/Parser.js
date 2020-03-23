@@ -9,7 +9,7 @@ class Parser extends ParserStates {
     constructor(givenExpression, startAt='$-root') {
         super()
         this.nodes = givenExpression.content
-        this.root = new Expression(givenExpression.parent, [], givenExpression.type)  // WARNING: Make sure the parent is ok!
+        this.root = new Expression(givenExpression.parent, [], givenExpression.type, givenExpression.isTuple)  // WARNING: Make sure the parent is ok!
         this.currentExpression = this.root
         this.stateStack = [startAt]
         this.currentNode = null     // Set in the for in parse
@@ -29,7 +29,7 @@ class Parser extends ParserStates {
     }
 
     branchOut (newExpressionType, newState=null) {  // Goes up 1 level and optionally 1 state
-        let newExpression = new Expression(this.currentExpression, [], newExpressionType)
+        let newExpression = new Expression(this.currentExpression, [], newExpressionType, false)
         this.push(newExpression)
         this.currentExpression = newExpression
         if (newState != null) this.stateStack.push(newState)
@@ -47,28 +47,23 @@ class Parser extends ParserStates {
         let content = this.currentExpression.content
         this.currentExpression.accessModifiers = []
         this.currentExpression.content = []
-        let newExpression = new Expression(this.currentExpression, content, newExpressionType)
+        let newExpression = new Expression(this.currentExpression, content, newExpressionType, false)
         newExpression.accessModifiers = accessModifiers
         this.currentExpression.content = [newExpression]
         this.currentExpression = newExpression
         this.stateStack.push(nextState)
-        console.log('this.currentExpression')
-        console.log(this.currentExpression)
     }
 
     getStateObjectName(stateName) {
-        console.log(stateName)
-        return '$' + dashCaseToCamelCase(stateName.substring(2))
+        //return '$' + dashCaseToCamelCase(stateName.substring(2))
+        return stateName
     } // Each state is mapped to a function (don't ask me why they are not just called the same)
 
     doState(functionName, nodeType) {
-        console.log(`Doing state ${functionName} for node type ${nodeType}`)
         if (this[functionName] != null) {
             if (this[functionName][nodeType] != null) {
-                console.log('Hmm')
                 this[functionName][nodeType]()
             } else if (this[functionName]['default'] != null) {
-                console.log('Huh')
                 this[functionName]['default']()
             } else {
                 this.error()
@@ -82,7 +77,7 @@ class Parser extends ParserStates {
         for (let node of this.nodes) {
             this.currentNode = node
             let state = this.getCurrentState()
-            console.log(`Node: '${node.content}'\tType: ${node.type}\tState ${state}`)
+            //console.log(`Node: '${node.content}'\tType: ${node.type}\tState ${state}`)
             let functionName = this.getStateObjectName(state)
             this.doState(functionName, node.type)
         }

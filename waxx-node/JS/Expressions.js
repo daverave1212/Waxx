@@ -2,13 +2,24 @@
 String.prototype.toJsonObject = function() { return this }
 
 class Expression {
-    constructor(parent, content, type) {
+    constructor(parent, content, type, isTuple=false) {
         this.parent = parent
         this.content = content
         this.accessModifiers = []
         this.type = type
-        this.isTuple = false
+        this.isTuple = isTuple
+        this.isExpression = true
     }
+
+    getScope() {
+        let parent = this.parent
+        while (true) {
+            if (parent == null) return null
+            if (parent.type == 'SCOPE') return parent
+            parent = parent.parent
+        }
+    }
+
     toString() {
         let mods = this.accessModifiers.join(' ')
         if (this.accessModifiers.length > 0) mods = '[' + mods + '] '
@@ -19,7 +30,6 @@ class Expression {
         }
         let contentStrings = this.content.map( elem => elem.toString() )
         switch (this.type) {
-            case 'expression':
             case 'EXPRESSION':
                 if (this.isTuple) {
                     return '(' + mods + contentStrings.join(', ') + ')'
@@ -32,13 +42,19 @@ class Expression {
                 } else {
                     return '(' + mods + contentStrings.join(' ') + ')'
                 }
+            case 'GENERICEXPRESSION':
+                if (this.isTuple) {
+                    return '<' + mods + contentStrings.join(', ') + '>'
+                } else {
+                    return '<' + mods + contentStrings.join(' ') + '>'
+                }
             case 'INDEXEXPRESSION':
                 if (this.isTuple) {
                     return '[' + mods + contentStrings.join(', ') + ']'
                 } else {
                     return '[' + mods + contentStrings.join(' ') + ']'
                 }
-            case 'attribution':
+            case 'ATTRIBUTION':
                 if (contentStrings.length == 0) throw 'Error: Attribution expression has no content.'
                 if (contentStrings.length == 1) throw 'Error: Attribution expression has no right side content.'
                 if (contentStrings.length > 2)  throw 'Error: Attribution expression has too many content elements.'
@@ -55,6 +71,7 @@ class Node {
     constructor(content, type='none') {
         this.content = content
         this.type = type
+        this.isNode = true
     }
     toString() { return this.content }
 }

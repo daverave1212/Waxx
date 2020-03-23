@@ -4,9 +4,11 @@ import { spaces } from './Utils.js'
 class Scope {
     constructor(parent, expression, content, indentation=0) {
         this.expression = expression
+        if (this.expression != null) this.expression.parent = this
         this.content = content
         this.parent = parent
         this.indentation = indentation
+        this.type = 'SCOPE'
     }
 
     toString() {

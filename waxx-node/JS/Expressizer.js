@@ -22,7 +22,6 @@ class ExpressizerStates {
         '[':        () => this.branchOut('INDEXEXPRESSION', '$-parenthesis-expression'),
         ']':        () => this.brateIn(),
         ',':        () => {
-            console.log('FOUNDIBOWAY!')
             this.currentExpression.isTuple = true
             if (this.currentExpression.type == 'PAREXPRESSION') {
                 this.wrapOver({
@@ -131,12 +130,11 @@ class Expressizer extends ExpressizerStates {
     }
 
     getStateObjectName(stateName) {
-        console.log(stateName)
         return '$' + dashCaseToCamelCase(stateName.substring(2))
     } // Each state is mapped to a function (don't ask me why they are not just called the same)
 
     doState(functionName, nodeType) {
-        console.log(`State ${functionName} for ${nodeType}`)
+        //console.log(`State ${functionName} for ${nodeType}`)
         if (this[functionName] != null) {
             if (this[functionName][nodeType] != null) {
                 this[functionName][nodeType]()
@@ -157,7 +155,6 @@ class Expressizer extends ExpressizerStates {
             let functionName = this.getStateObjectName(state)
             this.doState(functionName, word.type)
         }
-        console.log('')
         console.log('')
         return this.root
     }

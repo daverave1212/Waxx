@@ -3,166 +3,160 @@ import { Parser } from './Parser.js'
 
 export default class ParserStates {
 
-    $noState = {}
+    '$-no-state' = {}
 
-    $root = {
+    '$-root' = {
         'MODIFIER':     () => this.redirectToState('$-modifiers'),
         'FLOWCONTROL':  () => {
             this.push(this.currentNode.content)
             this.branchOut('flow-control-expression', '$-flow-control-expression')
         },
         'OVERHEAD':     () => {
-            this.currentExpression.type = 'overhead'
+            this.currentExpression.type = 'OVERHEAD'
             this.setState('$-overhead-path')
         },
+        'VAR':      () => this.redirectToState('$-var'),
+        'CLASS':    () => this.redirectToState('$-class-declaration'),
+        'FUNC':     () => this.redirectToState('$-function-declaration'),
         'default':      () => {
-            console.log(`Redirecting word ${this.currentNode.content} to $-normal-expression`)
+            // console.log(`Redirecting word ${this.currentNode.content} to $-normal-expression`)
             this.redirectToState('$-normal-expression')
         }
     }
 
-    $normalExpression = {
-        'EXPRESSION':       () => this.push(this.currentNode),
-        'PAREXPRESSION':    () => this.push(this.currentNode),
-        'INDEXEXPRESSION':  () => this.push(this.currentNode),
-        'default':          () => this.push(this.currentNode.content)
+    '$-normal-expression' = {
+        'default':          () => {
+            if (this.currentNode.isExpression == true) {
+                this.push(new Parser(this.currentNode, '$-normal-expression').parse())
+            } else {
+                this.push(this.currentNode.content)
+            }
+        }
     }
 
-    $flowControlExpression = {
+    '$-flow-control-expression' = {
         ':':        () => { this.brateIn(); this.branchOut('normal-expression', '$-normal-expression') },
         'default':  () => this.push(this.currentNode.content)
     }
 
-    $modifiers = {
+    '$-modifiers' = {
         'MODIFIER': () => this.currentExpression.accessModifiers.push(this.currentNode.content),
         'VAR':      () => this.redirectToState('$-var'),
         'CLASS':    () => this.redirectToState('$-class-declaration'),
         'FUNC':     () => this.redirectToState('$-function-declaration')
     }
 
-    $var = {
+    '$-var' = {
         'VAR':      () => {
-            this.currentExpression.type = 'variable-declaration'
+            this.currentExpression.type = 'VARDECLARATION'
             this.setState('$-var-name')
         }
     }
 
-    $functionDeclaration = {
+    '$-function-declaration' = {
         'FUNC':     () => {
-            this.currentExpression.type = 'function-declaration'
+            this.currentExpression.type = 'FUNCDECLARATION'
             this.setState('$-expecting-function-generic')
         }
     }
 
-    $classDeclaration = {
+    '$-class-declaration' = {
         'CLASS':    () => {
-            this.push(this.currentNode.content)
+            this.currentExpression.type = 'CLASSDECLARATION'
             this.setState('$-expecting-class-generic')
         }
     }
 
-    $expectingFunctionGeneric = {
+    '$-expecting-function-generic' = {
         'INDEXEXPRESSION':  () => {
-            this.push(new Parser(this.currentExpression, '$-normal-expression').parse())
+            let parsed = new Parser(this.currentNode, '$-normal-expression').parse()
+            parsed.type = 'GENERICEXPRESSION'
+            console.log(`Switching its type from ${this.currentNode.type} to ${parsed.type}`)
+            console.log('And heres the parsed:')
+            console.log(parsed)
+            this.push(parsed)
             this.setState('$-expecting-function-generic')
         },
         'ATOM':     () => this.redirectToState('$-function-name')
     }
 
-    $expectingClassGeneric = {
+    '$-expecting-class-generic' = {
         'INDEXEXPRESSION':  () => {
-            this.push(new Parser(this.currentExpression, '$-normal-expression').parse())
+            let parsed = new Parser(this.currentNode, '$-normal-expression').parse()
+            parsed.type = 'GENERICEXPRESSION'
+            this.push(parsed)
             this.setState('$-expecting-class-generic')
         },
         'ATOM':     () => this.redirectToState('$-class-name')
     }
 
-    $type = {
-        'ATOM':     () => {
-            this.push(this.currentNode.content)
-            this.setState('$-expecting-generic')
-        }
-    }
-
-    $expectingGeneric = {
-        '<':        () => this.branchOut('generic-expression', '$-generic-inner'),
-        'ATOM':     () => this.redirectToState('$-var-name')
-    }
-
-    $genericInner = {
-        '>':        () => this.brateIn(),
-        'ATOM':     () => this.push(this.currentNode.content)
-    }
-
-    $varName = {
+    '$-var-name' = {
         'ATOM':     () => {
             this.push(this.currentNode.content)
             this.setState('$-expecting-var-type')
         }
     }
 
-    $expectingVarType = {
+    '$-expecting-var-type' = {
         ':':        () => this.setState('$-var-type'),
         '=':        () => this.redirectToState('$-expecting-attribution-equals')
     }
 
-    $varType = {
+    '$-var-type' = {
         'ATOM':     () => {
             this.push(this.currentNode.content)
             this.setState('$-expecting-var-type-generic-or-equals')
         }
     }
 
-    $expectingVarTypeGenericOrEquals = {
+    '$-expecting-var-type-generic-or-equals' = {
         '=':        () => this.redirectToState('$-expecting-attribution-equals'),
         'INDEXEXPRESSION':  () => {
-            this.push(new Parser(this.currentExpression, '$-normal-expression').parse())
+            let parsed = new Parser(this.currentNode, '$-normal-expression').parse()
+            parsed.type = 'GENERICEXPRESSION'
+            this.push(parsed)
             this.setState('$-expecting-var-type-generic-or-equals')
         }
     }
 
-    $className = {
+    '$-class-name' = {
         'ATOM':     () => {
             this.push(this.currentNode.content)
             this.setState('$-no-state')
         }
     }
 
-    $functionName = {
+    '$-function-name' = {
         'ATOM':     () => {
             this.push(this.currentNode.content)
             this.setState('$-expecting-function-parameters')
         }
     }
 
-    $expectingFunctionParameters = {
+    '$-expecting-function-parameters' = {
         'PAREXPRESSION':   () => {
-            this.push(new Parser(this.currentNode, '$-function-parameters').parse())
+            this.push(new Parser(this.currentNode, '$-normal-expression').parse())
             this.setState('$-expecting-colon')
         }
     }
 
-    $expectingColon = {
+    '$-expecting-colon' = {
         ':':    () => this.setState('$-normal-expression')
     }
 
-    $expectingAttributionEquals = {
+    '$-expecting-attribution-equals' = {
         '=':    () => {
             this.wrapOver({
-                wrapperExpressionType: 'attribution',
+                wrapperExpressionType: 'ATTRIBUTION',
                 newExpressionType: this.currentExpression.type,
                 nextState: 'none'   // No need for a new state
             })
             this.brateIn()
-            this.branchOut('attribution-right', '$-normal-expression')
+            this.branchOut('ATTRIBUTIONRIGHT', '$-normal-expression')
         }
     }
 
-    $functionParameters = {
-        'default':      () => this.push(this.currentNode.content)
-    }
-
-    $overheadPath = {
+    '$-overhead-path' = {
         'STRING':   () => {
             this.push(this.currentNode.content)
             this.setState('$-no-state')
