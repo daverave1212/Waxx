@@ -1,0 +1,80 @@
+
+
+<head>
+    <script type="module" src="Utils.js"></script>
+    <script type="module" src="index.js"></script>
+
+    <script src="codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="codemirror/theme/neat.css">
+    <script src="codemirror/mode/waxx/waxx.js"></script>    
+</head>
+
+<style>
+    button {
+        width: 581px;
+        height: 200px;
+    }
+</style>
+
+<body>
+    <textarea id="TextArea" rows="40" cols="80">
+
+
+class Fibber
+
+    o currentNumber = 1
+    o previousNumber = 1
+
+    func next(nIterations)
+        if nIterations is 0
+            return my currentNumber
+        o currentNumberBackup = my currentNumber
+        my currentNumber = my currentNumber + my previousNumber
+        print('At:' + my currentNumber)
+        my previousNumber = currentNumberBackup
+        return my next(nIterations - 1)
+
+o fibber = new Fibber()
+
+alert(fibber.next(4))
+   
+        
+    </textarea>
+    <br>
+    <button id="Button">Go!</button>
+    <br>
+    <textarea id="Output" rows="30" cols="80">
+
+
+    </textarea>
+
+    <!---------- CodeMirror  ------------>
+    <script>
+        
+    </script>
+    <!---------- Base Script ------------->
+    <script type="module">
+
+        import * as index from './index.js'
+
+        /*
+        var codeArea = CodeMirror(document.getElementById("TextArea"), {
+            value: "function pow2(x) x^2\n\npow2(4) = 16",
+            mode:  "waxx",
+            theme: "neo"
+        });
+        codeArea.setSize(400, 685);*/
+        var codeArea = CodeMirror.fromTextArea(document.getElementById("TextArea"), {
+            lineNumbers: true,
+            mode: 'waxx',
+            theme: 'neat'
+        });
+
+        document.getElementById('Button').addEventListener('click', _ => {
+            let myCode = index.go(codeArea.getValue())
+            document.getElementById('Output').innerHTML = myCode
+            eval(myCode)
+        })
+    </script>
+</body>

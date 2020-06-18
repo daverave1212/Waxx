@@ -4,13 +4,16 @@ Waxx language
 
 
 
-
+## State Machine for Parser
 
 $-root:
     MODIFIER    >> $-modifiers
     FLOWCONTROL => $-flow-control-expression
-    default     >> $-normal-expression
     OVERHEAD    -> $-overhead-path -> $-no-state
+    VAR         >> $-var
+    CLASS       >> $-class-declaration
+    FUNC        >> $-function-declaration
+    default     >> $-normal-expression
 
 $-normal-expression:
     default     -> $-normal-expression
@@ -63,13 +66,16 @@ $-function-name:
     ATOM        -> $-expecting-function-parameters
 
 $-expecting-function-parameters:
-    PAREXPRESSION  ---> $-function-parameters -> $-expecting-colon
+    PAREXPRESSION  ---> $-normal-expression -> $-expecting-colon
 
 $-expecting-colon:
     :           -> $-normal-expression
 
 $-expecting-attribution-equals:
-    =           w> {wexp: attribution, nexp: SAME, nst: none} <= => $-normal-expression
+    =           w> {wexp: ATTRIBUTION, nexp: SAME, nst: none} <= => $-normal-expression
+
+$-generic:
+    default
 
 
 
@@ -79,8 +85,7 @@ $-expecting-attribution-equals:
 
 
 
-
-Legend:
+## Legend:
     ->  Set state and continue
     =>  Branch out to state and continue
     >>  Redirect to state
@@ -89,11 +94,17 @@ Legend:
     s=  set state
     ---> parse that expression recursively starting with state
 
+## Expression Types After Expressizer:
+( _ )                           = Expr PAREXPRESSION: content=_ isTuple=false
+(EXPRESSION, EXPRESSION, ...)   = Expr PAREXPRESSION: content=EXPRESSION,EXPRESSION,... isTuple=true
+[ _ ]                           = Expr INDEXEXPRESSION: content=_ isTuple=false
+[EXPRESSION, EXPRESSION, ...]   = Expr INDEXEXPRESSION: content=EXPRESSION,EXPRESSION,... isTuple=true
 
+## Allowed Structures:
 
-
-
-
+[MODIFIER]* CLASS ATOM          = Expr CLASSDECLARATION: content=ATOM
+[MODIFIER]* VAR ATOM [: ATOM            = Expr VARDECLARATION: 
+[MODIFIER]* VAR ATOM = ...      = Expr ATTRIBUTION: content=EXPR,EXPR
 
 
 public static ATOM              = variable declaration
