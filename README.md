@@ -13,10 +13,14 @@ $-root:
     VAR         >> $-var
     CLASS       >> $-class-declaration
     FUNC        >> $-function-declaration
-    default     >> $-normal-expression
+    default     -> $-normal-expression
 
 $-normal-expression:
     default     -> $-normal-expression
+    |           => $-normal-expression (PAREXPRESSION)
+    YAML        => $-expecting-yaml-colon
+    if isYaml:
+        :       w> {wexp: YAMLPROPERTYVALUE, nexp: SAME, nst: none} <= => $-normal-expression
 
 $-flow-control-expression:
     :           <= => $-normal-expression
@@ -71,16 +75,14 @@ $-expecting-function-parameters:
 $-expecting-colon:
     :           -> $-normal-expression
 
+$-expecting-yaml-colon:
+    :           -> $-expecting-nothing
+
+$-expecting-nothing:
+    default     -> $-no-state
+
 $-expecting-attribution-equals:
     =           w> {wexp: ATTRIBUTION, nexp: SAME, nst: none} <= => $-normal-expression
-
-$-generic:
-    default
-
-
-
-
-
 
 
 
@@ -95,41 +97,37 @@ $-generic:
     ---> parse that expression recursively starting with state
 
 ## Expression Types After Expressizer:
-( _ )                           = Expr PAREXPRESSION: content=_ isTuple=false
-(EXPRESSION, EXPRESSION, ...)   = Expr PAREXPRESSION: content=EXPRESSION,EXPRESSION,... isTuple=true
-[ _ ]                           = Expr INDEXEXPRESSION: content=_ isTuple=false
-[EXPRESSION, EXPRESSION, ...]   = Expr INDEXEXPRESSION: content=EXPRESSION,EXPRESSION,... isTuple=true
+ATOM                            = ATOM
+( _ )                           = Expr PAREXPRESSION: content=_  isTuple=false
+(EXPRESSION, EXPRESSION, ...)   = Expr PAREXPRESSION: content=EXPRESSION,EXPRESSION,...  isTuple=true
+[ _ ]                           = Expr INDEXEXPRESSION: content=_  isTuple=false
+[EXPRESSION, EXPRESSION, ...]   = Expr INDEXEXPRESSION: content=EXPRESSION,EXPRESSION,...  isTuple=true
 
 ## Allowed Structures:
 
-[MODIFIER]* CLASS ATOM          = Expr CLASSDECLARATION: content=ATOM
-[MODIFIER]* VAR ATOM [: ATOM            = Expr VARDECLARATION: 
-[MODIFIER]* VAR ATOM = ...      = Expr ATTRIBUTION: content=EXPR,EXPR
+[MODIFIER]* VAR ATOM                            = Expr VARDECLARATION: content=ATOM
+[MODIFIER]* VAR ATOM1 [: ATOM2]                 = Expr VARDECLARATION: content=ATOM1,ATOM2
+[MODIFIER]* VAR ATOM1 [: ATOM2 INDEXEXPRESSION] = Expr VARDECLARATION: content=ATOM1,ATOM2,GENERICEXPRESSION
+[MODIFIER]* VAR ATOM = _                        = Expr ATTRIBUTION: content=VARDECLARATION,EXPR
 
+[MODIFIER]* CLASS ATOM                          = Expr CLASSDECLARATION: content=ATOM
 
-public static ATOM              = variable declaration
-public static CLASS             = class definition
-public static FUNCTION          = function definition
+[MODIFIER]* FUNC ATOM PAREXPRESSION [:]         = Expr FUNCDECLARATION: content=ATOM,PAREXPRESSION
 
+FLOWCONTROL _1 [:] [_2]                         = Expr FLOWCONTROLEXPRESSION: content=FLOWCONTROL ATOM,PAREXPRESSION _1,EXPRESSION _2
 
+_1 | _2                                         = _1, Expr PAREXPR: content=_2
 
-
-
-Expressions:
-    type:
-        content = [atom, generic]
-    generic:
-        content = [type, type, type...]
-    variable-declaration:
-        content = [type, *generic, name]
+_ YAML :                                          -> parses yaml
 
 
 
 
 
 
-
-
-EXPRESSION: MODIFIER VAR ATOM : TYPE
-
-ATTRIBUTION:    EXPRESSION = EXPRESSION
+## Features mentioned in the thesis:
+- my
+- overhead ...
+- data class
+- yaml support
+- pipe operator

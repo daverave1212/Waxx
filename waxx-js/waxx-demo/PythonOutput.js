@@ -15,54 +15,56 @@ function isExpressionInClassScope(expression) {
     return isInClassScope
 }
 
+function pythonizeParametersWithSelf(parameters) {
+    if (parameters.startsWith('(')) {
+        return '(self, ' + parameters.substring(1)
+    } else {
+        throw 'Strange argument given to pythonizeParametersWithSelf'
+    }
+}
+
+function deparenthesizeString(str) {
+    if (str.startsWith('(') && str.endsWith(')')) return str.substring(1, str.length - 1)
+    else return str
+}
+
 export class LanguageOutputter {
 
     macros = {
-        'o':        'let',
-        'my':       'this.',
-        'and':      '&&',
-        'or':       '||',
-        'print':    'console.log',
-        'is':       '=='
+        'o':        '',
+        'my':       'self.',
+        'new':      ''
     }
 
-    getOverhead(path) { return  `// Overhead "${path}" not supported in JavaScript` }
+    getOverhead(path) { return  `# Overhead "${path}" not supported in Python (yet)` }
 
     getFunctionDeclaration({modifiers, name, generic, parameters, expression}) {
-        let mods = ''
-        //console.log('Modifiers for ' + name)
-        //console.log(modifiers)
         for (let mod of modifiers) {
-            if (mod == 'private') error('JavaScript does not support private fields.')
+            if (mod == 'private') error('Python does not support private fields.')
             if (mod == 'public') continue
-            if (mod == 'static') mods += 'static '
+            if (mod == 'static') continue
         }
-        if (generic != null) error('JavaScript does not support generics.')
-        if (isExpressionInClassScope(expression)) {
-            return mods + name + parameters
+        if (generic != null) error('Python does not support generics.')
+        if (isExpressionInClassScope(expression) && !modifiers.includes('static')) {
+            return 'def ' + name + pythonizeParametersWithSelf(parameters)
         } else {
-            return mods + 'function ' + name + parameters
+            return 'def ' + name + parameters
         }
     }
 
     getVarDeclaration({modifiers, name, type, expression}) {
         let mods = ''
         for (let mod of modifiers) {
-            if (mod == 'private') error('JavaScript does not support private fields.')
+            if (mod == 'private') error('Python does not support private fields.')
+            if (mod == 'export') error('Export is in JavaScript, partner, not Python.')
             if (mod == 'public') continue
-            if (mod == 'static') mods += 'static '
-            if (mod == 'export') mods += 'export '
+            if (mod == 'static') continue
         }
-        //if (type != null) error('JavaScript does not support variable types.')
-        if (isExpressionInClassScope(expression)) {
-            return mods + name
-        } else {
-            return mods + ' let ' + name
-        }
+        return name
     }
 
     getFlowControlExpression({name, inner, expression}) {               // Name is 'if', 'while', etc. inner is the processed expression, with parentheses
-        return name + ' ' + inner
+        return name + ' ' + deparenthesizeString(inner)
     }
 
     getYAMLExpression({key, value}) {                                   // How to output code like: "age: 20"; key and value are strings, already processed
@@ -71,13 +73,15 @@ export class LanguageOutputter {
     }
 
     outputScopeLine({indentation, scopeLine, hasChildren, scope}) {     // How to output a normal scope line. scopeLine is already processed. scope is an optional argument, if you need it
-        let ret = spaces(indentation) + scopeLine
-        if (hasChildren) ret += " {"
-        return ret
+        if (hasChildren && !scopeLine.trim().endsWith(':')) {
+            return spaces(indentation) + scopeLine + ':'
+        } else {
+            return spaces(indentation) + scopeLine
+        }
     }
     
     endScope({baseIndentation, scope}) {                                // How to handle the closing of a scope. In JS, it's just a closed bracket on the same indentation level as the scope's line
-        return spaces(baseIndentation) + '}'
+        return ''
     }
 
 }

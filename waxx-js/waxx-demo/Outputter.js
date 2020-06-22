@@ -1,8 +1,10 @@
 
 import { spaces } from './Utils.js'
 import * as JSOutput from './JSOutput.js'
+import * as PythonOutput from './PythonOutput.js'
 
-let Language = new JSOutput.LanguageOutputter()
+//let Language = new JSOutput.LanguageOutputter()
+let Language = new PythonOutput.LanguageOutputter()
 
 let error = message => {
     throw message
@@ -27,23 +29,32 @@ export function outputNode(node, options) {
     return new Outputter(node, options).output()
 }
 
+
+
 export function outputScope(scope) {
     let ret = ''
-    if (scope.expression == null) {
+    if (scope.expression == null) {                                         // Only if it is the root scope in the code
         ret = scope.content.map( sc => outputScope(sc)).join('\n')
         return ret
     } else {
         ret = spaces(scope.indentation) + outputNode(scope.expression)
+        ret = Language.outputScopeLine({
+            indentation:    scope.indentation,
+            scopeLine:      outputNode(scope.expression),
+            hasChildren:    scope.content.length > 0,
+            scope:          scope
+        })
         if (scope.content.length > 0) {
-            ret += ' {\n'
+            ret += '\n'
             ret += scope.content.map( sc => outputScope(sc)).join('\n') + '\n'
-            ret += spaces(scope.indentation) + '}'
+            ret += Language.endScope({baseIndentation: scope.indentation, scope})
             return ret
         } else {
             return ret
         }
     }
 }
+
 
 class Outputter {
     constructor(node, options = {}) {
@@ -138,13 +149,24 @@ class Outputter {
             return outputNode(this.node.content[0]) + ' = ' + outputNode(this.node.content[1])
         },
         'FLOWCONTROLEXPRESSION':    () => {
-            let name = this.node.content[0]
+            let name = this.node.content[0]                     // 'if', 'while', 'switch', ...
             let inner = outputNode(this.node.content[1])
             console.log({inner})
             console.log({name})
             return Language.getFlowControlExpression({
                 name, inner, expression: this.node
             })
+        },
+        'YAMLPROPERTYVALUE':        () => {
+            let key = outputNode(this.node.content[0])
+            let value = null
+            if (this.node.content.length > 1) {
+                let rightExpression = this.node.content[1]
+                if (rightExpression.content.length > 0) {
+                    value = outputNode(rightExpression)
+                }
+            }
+            return Language.getYAMLExpression({ key, value })
         },
         'default':      () => {
             console.log(this.node)

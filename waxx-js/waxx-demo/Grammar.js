@@ -1,6 +1,6 @@
 
 
-export let operators = ['!=', '!', '.', ',', '==', '<=', '>=', '(', ')', '[', ']', '=', '+', '-', '*', '/', ';', ':', '<', '>']
+export let operators = ['!=', '!', '.', ',', '==', '<=', '>=', '(', ')', '[', ']', '=', '+', '-', '*', '/', ';', ':', '<', '>', '|']
 
 export let separators = [
     ['"', '"'],
@@ -32,10 +32,12 @@ let tokenTypeMapping = {
     '=': '=',
     ':': ':',
     ',': ',',
+    '|': '|',
     'o': 'VAR',
     'overhead': 'OVERHEAD',
     'class': 'CLASS',
-    'func': 'FUNC'
+    'func': 'FUNC',
+    'yaml': 'YAML'
 }
 
 let isString = (str) => str[0] == '"' || str[0] == "'"

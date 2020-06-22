@@ -21,22 +21,43 @@ export default class ParserStates {
         'FUNC':     () => this.redirectToState('$-function-declaration'),
         'default':      () => {
             // console.log(`Redirecting word ${this.currentNode.content} to $-normal-expression`)
-            this.redirectToState('$-normal-expression')
+            this.push(this.currentNode.content)
+            this.setState('$-normal-expression')
         }
     }
 
     '$-normal-expression' = {
-        'default':          () => {
-            if (this.currentNode.isExpression == true) {
-                this.push(new Parser(this.currentNode, '$-normal-expression').parse())
+        '|':                () => {
+            this.branchOut('PAREXPRESSION', '$-normal-expression')
+        },        
+        'YAML':             () => {
+            this.setState('$-expecting-yaml-colon')
+            this.areChildScopesYAML = true
+        },
+        ':':                () => {
+            if (this.isYAML) {
+                this.wrapOver({
+                    wrapperExpressionType: 'YAMLPROPERTYVALUE',
+                    newExpressionType: this.currentExpression.type,
+                    nextState: 'none'   // No need for a new state
+                })
+                this.brateIn()
+                this.branchOut('EXPRESSION', '$-normal-expression')
             } else {
                 this.push(this.currentNode.content)
             }
-        }
+        },
+        'default':          () => {
+            if (this.currentNode.isExpression == true) {
+                this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
+            } else {
+                this.push(this.currentNode.content)
+            }
+        },
     }
 
     '$-flow-control-expression' = {
-        ':':        () => { this.brateIn(); this.branchOut('normal-expression', '$-normal-expression') },
+        ':':        () => { this.brateIn(); this.branchOut('EXPRESSION', '$-normal-expression') },
         'default':  () => this.push(this.currentNode.content)
     }
 
@@ -70,7 +91,7 @@ export default class ParserStates {
 
     '$-expecting-function-generic' = {
         'INDEXEXPRESSION':  () => {
-            let parsed = new Parser(this.currentNode, '$-normal-expression').parse()
+            let parsed = new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse()
             parsed.type = 'GENERICEXPRESSION'
             console.log(`Switching its type from ${this.currentNode.type} to ${parsed.type}`)
             console.log('And heres the parsed:')
@@ -83,7 +104,7 @@ export default class ParserStates {
 
     '$-expecting-class-generic' = {
         'INDEXEXPRESSION':  () => {
-            let parsed = new Parser(this.currentNode, '$-normal-expression').parse()
+            let parsed = new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse()
             parsed.type = 'GENERICEXPRESSION'
             this.push(parsed)
             this.setState('$-expecting-class-generic')
@@ -113,7 +134,7 @@ export default class ParserStates {
     '$-expecting-var-type-generic-or-equals' = {
         '=':        () => this.redirectToState('$-expecting-attribution-equals'),
         'INDEXEXPRESSION':  () => {
-            let parsed = new Parser(this.currentNode, '$-normal-expression').parse()
+            let parsed = new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse()
             parsed.type = 'GENERICEXPRESSION'
             this.push(parsed)
             this.setState('$-expecting-var-type-generic-or-equals')
@@ -136,13 +157,18 @@ export default class ParserStates {
 
     '$-expecting-function-parameters' = {
         'PAREXPRESSION':   () => {
-            this.push(new Parser(this.currentNode, '$-normal-expression').parse())
+            this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
             this.setState('$-expecting-colon')
         }
     }
 
     '$-expecting-colon' = {
         ':':    () => this.setState('$-normal-expression')
+    }
+
+    '$-expecting-yaml-colon' = {
+        ':':        () => this.setState('$-expecting-nothing'),
+        'default':  () => this.setState('$-no-state')
     }
 
     '$-expecting-attribution-equals' = {
@@ -163,4 +189,5 @@ export default class ParserStates {
             this.setState('$-no-state')
         }
     }
+
 }

@@ -31,13 +31,13 @@ class Fibber
             return my currentNumber
         o currentNumberBackup = my currentNumber
         my currentNumber = my currentNumber + my previousNumber
-        print('At:' + my currentNumber)
+        print | 'At:' + my currentNumber
         my previousNumber = currentNumberBackup
         return my next(nIterations - 1)
 
 o fibber = new Fibber()
 
-alert(fibber.next(4))
+alert | fibber.next | 4
    
         
     </textarea>

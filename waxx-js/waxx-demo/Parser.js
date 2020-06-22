@@ -6,15 +6,21 @@ import { Expression } from './Expressions.js'
 import { dashCaseToCamelCase } from './Utils.js'
 
 class Parser extends ParserStates {
-    constructor(givenExpression, startAt='$-root') {
+
+    constructor({givenExpression, startAt='$-root', isYAML=false}) {
         super()
         this.nodes = givenExpression.content
         this.root = new Expression(givenExpression.parent, [], givenExpression.type, givenExpression.isTuple)  // WARNING: Make sure the parent is ok!
         this.currentExpression = this.root
-        this.stateStack = [startAt]
-        this.currentNode = null     // Set in the for in parse
+        this.currentNode = null                 // Set in the for in parse
+        this.areChildScopesYAML = false         // If the parsing ended in 'yaml,:' then this flag is set to true. It's handled in the function outside of the Parser
+        this.isYAML = isYAML                    // Its expression will be parsed exclusively as YAML
+        if (isYAML)
+            this.areChildScopesYAML = true
 
         this._stateHistory = [startAt]
+
+        this.stateStack = [startAt]
     }
 
     exit(message) { console.log('Error: ' + message);  throw 'Exiting' }
@@ -87,11 +93,24 @@ class Parser extends ParserStates {
 }
 
 
-function parseScope(baseScope) {
-    if (baseScope.expression != null)
-        baseScope.expression = new Parser(baseScope.expression).parse()
-    for (let scope of baseScope.content) {
-        parseScope(scope)
+function parseScope(baseScope, isYaml = false) {
+    let parser = null
+    if (baseScope.expression != null) {
+        parser = new Parser({
+            givenExpression: baseScope.expression,
+            startAt: '$-root',
+            isYAML: isYaml
+        })
+        baseScope.expression = parser.parse()
+    }
+    if (parser != null && parser.areChildScopesYAML) {                // The 'areChildScopesYAML' property is set during parsing
+        for (let scope of baseScope.content) {
+            parseScope(scope, true)                 // Parses all content as YAML
+        }
+    } else {                                        // Else parse normally
+        for (let scope of baseScope.content) {
+            parseScope(scope, false)
+        }
     }
 }
 
