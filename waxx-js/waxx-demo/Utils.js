@@ -1,4 +1,22 @@
 
+
+function splitArrayByIndicesExclusive(array, indices) {
+    if (indices.length == 0) {
+        console.log('No indices given.')
+        return [array]
+    }
+    let parts = []
+    let start = 0
+    for (let index of indices) {
+        let part = array.slice(start, index)
+        if (part != null && part.length > 0) parts.push(part)
+        start = index + 1
+    }
+    let finalPart = array.slice(start, array.length)
+    if (finalPart != null && finalPart.length > 0) parts.push(finalPart)
+    return parts
+}
+
 const capitalize = (s) => {
     if (typeof s !== 'string') return ''
     return s.charAt(0).toUpperCase() + s.slice(1)
@@ -24,4 +42,4 @@ function isSpace(text) {
     return (text.trim().length == 0)
 }
 
-export { spaces, dashCaseToCamelCase, capitalize, isSpace }
+export { spaces, dashCaseToCamelCase, capitalize, isSpace, splitArrayByIndicesExclusive }

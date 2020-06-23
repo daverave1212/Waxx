@@ -26,6 +26,28 @@ export class LanguageOutputter {
         'is':       '=='
     }
 
+    getDataDeclaration({indentation, className, fields, expression}) {
+
+        function getCloneFunction() {
+            let ret = spaces(indentation + 4) + 'clone() {\n'
+            ret += spaces(indentation + 8) + 'let __clone = new ' + className + '()\n'
+            for (let {name, type, value} of fields) {
+                ret += spaces(indentation + 8) + `__clone.${name} = this.${name}\n`
+            }
+            ret += spaces(indentation + 8) + 'return __clone\n'
+            ret += spaces(indentation + 4) + '}\n'
+            return ret
+        }
+
+        let ret = `class ${className} {\n`
+        for (let {name, type, value} of fields) {
+            ret += spaces(indentation + 4) + name /*+ (type==null ? '' : ' : ' + type)*/ + (value==null ? '' : ' = ' + value) + '\n'
+        }
+        ret += getCloneFunction()
+        ret += spaces(indentation) + '}'
+        return ret
+    }
+
     getOverhead(path) { return  `// Overhead "${path}" not supported in JavaScript` }
 
     getFunctionDeclaration({modifiers, name, generic, parameters, expression}) {

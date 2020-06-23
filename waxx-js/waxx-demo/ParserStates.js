@@ -18,9 +18,9 @@ export default class ParserStates {
         },
         'VAR':      () => this.redirectToState('$-var'),
         'CLASS':    () => this.redirectToState('$-class-declaration'),
+        'DATA':     () => this.redirectToState('$-data-declaration'),
         'FUNC':     () => this.redirectToState('$-function-declaration'),
         'default':      () => {
-            // console.log(`Redirecting word ${this.currentNode.content} to $-normal-expression`)
             this.push(this.currentNode.content)
             this.setState('$-normal-expression')
         }
@@ -65,6 +65,7 @@ export default class ParserStates {
         'MODIFIER': () => this.currentExpression.accessModifiers.push(this.currentNode.content),
         'VAR':      () => this.redirectToState('$-var'),
         'CLASS':    () => this.redirectToState('$-class-declaration'),
+        'DATA':     () => this.redirectToState('$-data-declaration'),
         'FUNC':     () => this.redirectToState('$-function-declaration')
     }
 
@@ -86,6 +87,13 @@ export default class ParserStates {
         'CLASS':    () => {
             this.currentExpression.type = 'CLASSDECLARATION'
             this.setState('$-expecting-class-generic')
+        }
+    }
+
+    '$-data-declaration' = {
+        'DATA':     () => {
+            this.currentExpression.type = 'DATADECLARATION'
+            this.setState('$-data-name')
         }
     }
 
@@ -145,6 +153,13 @@ export default class ParserStates {
         'ATOM':     () => {
             this.push(this.currentNode.content)
             this.setState('$-no-state')
+        }
+    }
+
+    '$-data-name'  = {
+        'ATOM':     () => {
+            this.push(this.currentNode.content)
+            this.branchOut('EXPRESSION', '$-normal-expression')
         }
     }
 

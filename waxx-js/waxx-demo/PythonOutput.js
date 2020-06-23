@@ -33,6 +33,7 @@ export class LanguageOutputter {
     macros = {
         'o':        '',
         'my':       'self.',
+        'is':       '==',
         'new':      ''
     }
 

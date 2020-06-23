@@ -11,6 +11,7 @@ $-root:
     FLOWCONTROL => $-flow-control-expression
     OVERHEAD    -> $-overhead-path -> $-no-state
     VAR         >> $-var
+    DATA        >> $-data-declaration
     CLASS       >> $-class-declaration
     FUNC        >> $-function-declaration
     default     -> $-normal-expression
@@ -31,6 +32,7 @@ $-modifiers:
     VAR         >> $-var
     CLASS       >> $-class-declaration
     FUNC        >> $-function-declaration
+    DATA        >> $-data-declaration
 
 $-var:
     VAR         -> $-var-name
@@ -55,6 +57,9 @@ $-function-declaration:
 $-class-declaration:
     CLASS       -> $-expecting-class-generic
 
+$-data-declaration:
+    DATA        -> $-data-name
+
 $-expecting-function-generic:
     INDEXEXPRESSION -> $-expecting-function-generic
     ATOM            >> $-function-name
@@ -65,6 +70,9 @@ $-class-generic:
 
 $-class-name:
     ATOM        -> ...
+
+$-data-name:
+    ATOM        => $-normal-expression
 
 $-function-name:
     ATOM        -> $-expecting-function-parameters
@@ -129,5 +137,3 @@ _ YAML :                                          -> parses yaml
 - my
 - overhead ...
 - data class
-- yaml support
-- pipe operator

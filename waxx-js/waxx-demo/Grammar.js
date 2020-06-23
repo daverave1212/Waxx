@@ -36,6 +36,7 @@ let tokenTypeMapping = {
     'o': 'VAR',
     'overhead': 'OVERHEAD',
     'class': 'CLASS',
+    'data': 'DATA',
     'func': 'FUNC',
     'yaml': 'YAML'
 }

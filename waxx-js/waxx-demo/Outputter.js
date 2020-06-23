@@ -1,10 +1,10 @@
-
-import { spaces } from './Utils.js'
+ 
+import { spaces, splitArrayByIndicesExclusive } from './Utils.js'
 import * as JSOutput from './JSOutput.js'
 import * as PythonOutput from './PythonOutput.js'
 
-//let Language = new JSOutput.LanguageOutputter()
-let Language = new PythonOutput.LanguageOutputter()
+let Language = new JSOutput.LanguageOutputter()
+//let Language = new PythonOutput.LanguageOutputter()
 
 let error = message => {
     throw message
@@ -25,22 +25,35 @@ let getVarType = expr => expr.content[1]
 
 const NEWLINE = '\n'
 
-export function outputNode(node, options) {
-    return new Outputter(node, options).output()
+function outputNode({node, options, parentScope}) {
+    return new Outputter(node, options, parentScope).output()
 }
 
-
+function splitTypedVarIntoExpressions(expression) {
+    if (expression == null) throw 'Null expression given'
+    if (expression.content.length == 0) throw 'Empty expression given'
+    let colonPosition = expression.content.findIndex(e => e == ':')
+    let equalPosition = expression.content.findIndex(e => e == '=')
+    let splitPositions = [colonPosition, equalPosition].filter(i => i != -1)
+    let expressions = splitArrayByIndicesExclusive(expression.content, splitPositions)
+    return {
+        name : expressions[0],
+        type : expressions.length > 1 ? expressions[1] : null,
+        value : expressions.length > 2 ? expressions[2] : null
+    }
+}
 
 export function outputScope(scope) {
+    console.log(`Outputting scope: ${scope.expression}`)
     let ret = ''
     if (scope.expression == null) {                                         // Only if it is the root scope in the code
         ret = scope.content.map( sc => outputScope(sc)).join('\n')
         return ret
     } else {
-        ret = spaces(scope.indentation) + outputNode(scope.expression)
+        ret = spaces(scope.indentation) + outputNode({node: scope.expression, parentScope: scope})
         ret = Language.outputScopeLine({
             indentation:    scope.indentation,
-            scopeLine:      outputNode(scope.expression),
+            scopeLine:      outputNode({node: scope.expression, parentScope: scope}),
             hasChildren:    scope.content.length > 0,
             scope:          scope
         })
@@ -57,7 +70,8 @@ export function outputScope(scope) {
 
 
 class Outputter {
-    constructor(node, options = {}) {
+    constructor(node, options = {}, scope) {
+        this.scope = scope
         this.node = node
         this.mods = ''
         this.treatIndexAsGeneric = options.treatIndexAsGeneric != null? options.treatIndexAsGeneric: false
@@ -97,9 +111,9 @@ class Outputter {
         'FUNCDECLARATION':  () => {
             let generic = null
             if (doesFuncHaveGeneric(this.node)) {
-                generic = outputNode(getFuncGeneric(this.node))
+                generic = outputNode({node: getFuncGeneric(this.node), parentScope: this.scope})
             }
-            let params = outputNode(getFuncParameters(this.node))
+            let params = outputNode({node: getFuncParameters(this.node), parentScope: this.scope})
             let ret = Language.getFunctionDeclaration({
                 modifiers: this.node.accessModifiers,
                 generic: generic,
@@ -113,44 +127,74 @@ class Outputter {
             if (this.node.accessModifiers != null && this.node.accessModifiers.length > 0)
                 this.mods = '/*' + this.mods + '*/'
             if (doesClassHaveGeneric(this.node)) {
-                let generic = outputNode(getClassGeneric(this.node))
+                let generic = outputNode({node: getClassGeneric(this.node), parentScope: this.scope})
                 return this.mods + ' class /*' + generic + '*/ ' + getClassName(this.node)
             } else {
                 return this.mods + ' class ' + getClassName(this.node)
             }
         },
+        'DATADECLARATION': () => {
+            if (this.node.content.length < 2) throw 'Syntax error for data class declaration'
+            let indentation = this.scope.indentation
+            let className = this.node.content[0]
+            let body = this.node.content[1] // Expression
+            if (body.content.length == 1 && body.content[0].type == 'PAREXPRESSION') { // It means it was actually a PAREXPRESSION
+                body = body.content[0]
+            }
+            let fields = []
+            let expressionsToParse = []
+            if (body.isTuple)
+                expressionsToParse = [...body.content]
+            else
+                expressionsToParse = [body.content[0]]
+
+            let parseParameterExpression = expr => {
+                let parameter = splitTypedVarIntoExpressions(expr)
+                parameter.name  = parameter.name.map(node => outputNode({node, parentScope: this.scope}))
+                parameter.type  = parameter.type?.map(node => outputNode({node, parentScope: this.scope}))
+                parameter.value = parameter.value?.map(node => outputNode({node, parentScope: this.scope}))
+                console.log(parameter)
+                return parameter
+            }
+
+            for (let expr of expressionsToParse) {
+                fields.push(parseParameterExpression(expr))
+            }
+
+            return Language.getDataDeclaration({indentation, className, fields, expression: this.node})
+        },
         'PAREXPRESSION':    () => {
             if (this.node.isTuple == true) {
-                return '(' + this.node.content.map( node => outputNode(node)).join(', ') + ')'
+                return '(' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(', ') + ')'
             } else {
-                return '(' + this.node.content.map( node => outputNode(node)).join(' ') + ')'
+                return '(' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(' ') + ')'
             }
         },
         'INDEXEXPRESSION':      () => {
             if (this.treatIndexAsGeneric == true) return this.outputs['GENERICEXPRESSION']()
             else {
                 if (this.node.isTuple == true) {
-                    return '[' + this.node.content.map( node => outputNode(node)).join(', ') + ']'
+                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(', ') + ']'
                 } else {
-                    return '[' + this.node.content.map( node => outputNode(node)).join(', ') + ']'
+                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(', ') + ']'
                 }
             }
         },
         'GENERICEXPRESSION':    () => {
             if (this.node.isTuple == false)
-                return '<' + this.node.content.map( node => outputNode(node, {treatIndexAsGeneric: true})).join(' ') + '>'
+                return '<' + this.node.content.map( node => outputNode({node, options: {treatIndexAsGeneric: true}, parentScope: this.scope})).join(' ') + '>'
             else
-                return '<' + this.node.content.map( node => outputNode(node, {treatIndexAsGeneric: true})).join(', ') + '>'
+                return '<' + this.node.content.map( node => outputNode({node, options: {treatIndexAsGeneric: true}, parentScope: this.scope})).join(', ') + '>'
         },
         'EXPRESSION':   () => {
-            return this.node.content.map( node => outputNode(node)).join(' ')
+            return this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(' ')
         },
         'ATTRIBUTION':  () => {
-            return outputNode(this.node.content[0]) + ' = ' + outputNode(this.node.content[1])
+            return outputNode({node: this.node.content[0], parentScope: this.scope}) + ' = ' + outputNode({node: this.node.content[1], parentScope: this.scope})
         },
         'FLOWCONTROLEXPRESSION':    () => {
             let name = this.node.content[0]                     // 'if', 'while', 'switch', ...
-            let inner = outputNode(this.node.content[1])
+            let inner = outputNode({node: this.node.content[1], parentScope: this.scope})
             console.log({inner})
             console.log({name})
             return Language.getFlowControlExpression({
@@ -158,12 +202,12 @@ class Outputter {
             })
         },
         'YAMLPROPERTYVALUE':        () => {
-            let key = outputNode(this.node.content[0])
+            let key = outputNode({node: this.node.content[0], parentScope: this.scope})
             let value = null
             if (this.node.content.length > 1) {
                 let rightExpression = this.node.content[1]
                 if (rightExpression.content.length > 0) {
-                    value = outputNode(rightExpression)
+                    value = outputNode({node: rightExpression, parentScope: this.scope})
                 }
             }
             return Language.getYAMLExpression({ key, value })
