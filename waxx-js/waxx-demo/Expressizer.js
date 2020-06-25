@@ -12,6 +12,8 @@ class ExpressizerStates {
         ')':        () => this.error('No parenthesis to close'),
         ']':        () => this.error('No bracket to close.'),
         '[':        () => this.branchOut('INDEXEXPRESSION', '$-parenthesis-expression'),
+        '{':        () => this.branchOut('GENERICEXPRESSION', '$-parenthesis-expression'),
+        '}':        () => this.error('No curly brace to close.'),
         'default':  () => this.push(new Node(this.currentWord.string, this.currentWord.type))
     }
 
@@ -21,6 +23,8 @@ class ExpressizerStates {
         ')':        () => this.brateIn(),
         '[':        () => this.branchOut('INDEXEXPRESSION', '$-parenthesis-expression'),
         ']':        () => this.brateIn(),
+        '{':        () => this.branchOut('GENERICEXPRESSION', '$-parenthesis-expression'),
+        '}':        () => this.brateIn(),
         ',':        () => {
             this.currentExpression.isTuple = true
             if (this.currentExpression.type == 'PAREXPRESSION') {
@@ -39,7 +43,14 @@ class ExpressizerStates {
                 })
                 this.brateIn()
                 this.branchOut('EXPRESSION', '$-index-tuple-expression')
-                console.log('Ok, cool...')
+            } else if (this.currentExpression.type == 'GENERICEXPRESSION') {
+                this.wrapOver({
+                    wrapperExpressionType: this.currentExpression.type,
+                    newExpressionType: 'EXPRESSION',
+                    nextState: '$-generic-tuple-expression'
+                })
+                this.brateIn()
+                this.branchOut('EXPRESSION', '$-index-tuple-expression')
             } else {
                 this.error('Nope. not yet m8')
             }
@@ -56,6 +67,8 @@ class ExpressizerStates {
         },
         '[':        () => this.branchOut('INDEXEXPRESSION', '$-parenthesis-expression'),
         ']':        () => this.error('Wrong bracket closing'),
+        '{':        () => this.branchOut('GENERICEXPRESSION', '$-parenthesis-expression'),
+        '}':        () => this.error('Wrong curly brace closing'),
         ',':        () => {
             this.brateIn()
             this.branchOut('EXPRESSION', '$-par-tuple-expression')
@@ -72,9 +85,29 @@ class ExpressizerStates {
             this.brateIn()
             this.brateIn()
         },
+        '{':        () => this.branchOut('GENERICEXPRESSION', '$-parenthesis-expression'),
+        '}':        () => this.error('Wrong curly brace closing'),
         ',':        () => {
             this.brateIn()
             this.branchOut('EXPRESSION', '$-index-tuple-expression')
+        },
+        'default':  () => this.push(new Node(this.currentWord.string, this.currentWord.type))
+    }
+
+    $genericTupleExpression = {
+        'ATOM':     () => this.push(new Node(this.currentWord.string, this.currentWord.type)),
+        '(':        () => this.error('Strange parenthesis found in generic.'),
+        ')':        () => this.error('Wrong parenthesis closing.'),
+        '[':        () => this.error('Strange bracket found in generic.'),
+        ']':        () => this.error('Wrong bracket closing.'),
+        '{':        () => this.branchOut('GENERICEXPRESSION', '$-parenthesis-expression'),
+        '}':        () => {
+            this.brateIn()
+            this.brateIn()
+        },
+        ',':        () => {
+            this.brateIn()
+            this.branchOut('EXPRESSION', '$-generic-tuple-expression')
         },
         'default':  () => this.push(new Node(this.currentWord.string, this.currentWord.type))
     }

@@ -1,5 +1,5 @@
 
-import { spaces } from './Utils.js'
+import { spaces } from '../Utils.js'
 
 let error = message => {
     alert(message)
@@ -18,11 +18,11 @@ function isExpressionInClassScope(expression) {
 export class LanguageOutputter {
 
     macros = {
-        'o':        'let',
+        'o':        'var',
         'my':       'this.',
         'and':      '&&',
         'or':       '||',
-        'print':    'console.log',
+        'print':    'trace',
         'is':       '=='
     }
 
@@ -30,56 +30,55 @@ export class LanguageOutputter {
 
         function getCloneFunction() {
             let ret = spaces(indentation + 4) + 'clone() {\n'
-            ret += spaces(indentation + 8) + 'let __clone = new ' + className + '()\n'
+            ret += spaces(indentation + 8) + 'var __clone = new ' + className + '();\n'
             for (let {name, type, value} of fields) {
-                ret += spaces(indentation + 8) + `__clone.${name} = this.${name}\n`
+                ret += spaces(indentation + 8) + `__clone.${name} = this.${name};\n`
             }
-            ret += spaces(indentation + 8) + 'return __clone\n'
+            ret += spaces(indentation + 8) + 'return __clone;\n'
             ret += spaces(indentation + 4) + '}\n'
             return ret
         }
 
         let ret = `class ${className} {\n`
         for (let {name, type, value} of fields) {
-            ret += spaces(indentation + 4) + name /*+ (type==null ? '' : ' : ' + type)*/ + (value==null ? '' : ' = ' + value) + '\n'
+            ret += spaces(indentation + 4) + name + (type==null ? '' : ' : ' + type) + (value==null ? '' : ' = ' + value) + ';\n'
         }
         ret += getCloneFunction()
         ret += spaces(indentation) + '}'
         return ret
     }
 
-    getOverhead(path) { return  `// Overhead "${path}" not supported in JavaScript` }
+    getOverhead(path) { return  `// Overhead "${path}" not supported in Haxe` }
 
     getFunctionDeclaration({modifiers, name, generic, parameters, expression}) {
         let mods = ''
-        //console.log('Modifiers for ' + name)
-        //console.log(modifiers)
         for (let mod of modifiers) {
-            if (mod == 'private') error('JavaScript does not support private fields.')
-            if (mod == 'public') continue
+            if (mod == 'private') mods += 'private '
+            if (mod == 'public') mods += 'public '
             if (mod == 'static') mods += 'static '
         }
-        if (generic != null) error('JavaScript does not support generics.')
+        if (generic != null) error('Haxe does not support function generics.')
         if (isExpressionInClassScope(expression)) {
-            return mods + name + parameters
+            return mods + 'function ' + name + parameters
         } else {
             return mods + 'function ' + name + parameters
         }
     }
 
     getVarDeclaration({modifiers, name, type, expression}) {
+        if (type == null) console.log('Is null')
         let mods = ''
         for (let mod of modifiers) {
-            if (mod == 'private') error('JavaScript does not support private fields.')
-            if (mod == 'public') continue
+            if (mod == 'private') mods += 'private '
+            if (mod == 'public') mods += 'public '
             if (mod == 'static') mods += 'static '
             if (mod == 'export') mods += 'export '
+            if (mod == 'export') mods += 'inline '
         }
-        //if (type != null) error('JavaScript does not support variable types.')
         if (isExpressionInClassScope(expression)) {
-            return mods + name
+            return mods + 'var ' + name + (type==null ? '' : ' : ' + type)
         } else {
-            return mods + ' let ' + name
+            return mods + 'var ' + name + (type==null ? '' : ' : ' + type)
         }
     }
 
@@ -95,6 +94,7 @@ export class LanguageOutputter {
     outputScopeLine({indentation, scopeLine, hasChildren, scope}) {     // How to output a normal scope line. scopeLine is already processed. scope is an optional argument, if you need it
         let ret = spaces(indentation) + scopeLine
         if (hasChildren) ret += " {"
+        else ret += ';'
         return ret
     }
     

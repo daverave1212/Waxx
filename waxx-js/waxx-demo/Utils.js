@@ -42,4 +42,15 @@ function isSpace(text) {
     return (text.trim().length == 0)
 }
 
-export { spaces, dashCaseToCamelCase, capitalize, isSpace, splitArrayByIndicesExclusive }
+function isRunningInBrowser() {
+    if (window == null) return false
+    return true
+}
+
+function doTimes(times, func) {
+    for (let i = 1; i<=times; i++) {
+        func()
+    }
+}
+
+export { spaces, dashCaseToCamelCase, capitalize, isSpace, splitArrayByIndicesExclusive, isRunningInBrowser, doTimes }

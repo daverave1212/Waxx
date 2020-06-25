@@ -58,13 +58,6 @@ alert | fibber.next | 4
 
         import * as index from './index.js'
 
-        /*
-        var codeArea = CodeMirror(document.getElementById("TextArea"), {
-            value: "function pow2(x) x^2\n\npow2(4) = 16",
-            mode:  "waxx",
-            theme: "neo"
-        });
-        codeArea.setSize(400, 685);*/
         var codeArea = CodeMirror.fromTextArea(document.getElementById("TextArea"), {
             lineNumbers: true,
             mode: 'waxx',
@@ -72,7 +65,7 @@ alert | fibber.next | 4
         });
 
         document.getElementById('Button').addEventListener('click', _ => {
-            let myCode = index.go(codeArea.getValue())
+            let myCode = index.go(codeArea.getValue(), 'js')
             document.getElementById('Output').innerHTML = myCode
             eval(myCode)
         })

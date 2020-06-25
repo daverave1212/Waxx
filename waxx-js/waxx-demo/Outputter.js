@@ -1,9 +1,8 @@
  
-import { spaces, splitArrayByIndicesExclusive } from './Utils.js'
-import * as JSOutput from './JSOutput.js'
-import * as PythonOutput from './PythonOutput.js'
+import { spaces, splitArrayByIndicesExclusive, isRunningInBrowser } from './Utils.js'
 
-let Language = new JSOutput.LanguageOutputter()
+
+//let Language = new JSOutput.LanguageOutputter()
 //let Language = new PythonOutput.LanguageOutputter()
 
 let error = message => {
@@ -19,14 +18,13 @@ let doesClassHaveGeneric = doesFuncHaveGeneric
 let getClassName = getFuncName
 let getClassGeneric = getFuncGeneric
 
-let doesVarHaveType = expr => expr.content.length == 2
+let doesVarHaveType = expr => expr.content.length >= 2
 let getVarName = expr => expr.content[0]
 let getVarType = expr => expr.content[1]
 
-const NEWLINE = '\n'
-
-function outputNode({node, options, parentScope}) {
-    return new Outputter(node, options, parentScope).output()
+function outputNode({node, options, parentScope, language}) {
+    if (language == null) throw 'ERROR: Null language given to outputNode!'
+    return new Outputter(node, options, parentScope, language).output()
 }
 
 function splitTypedVarIntoExpressions(expression) {
@@ -43,24 +41,23 @@ function splitTypedVarIntoExpressions(expression) {
     }
 }
 
-export function outputScope(scope) {
-    console.log(`Outputting scope: ${scope.expression}`)
+export function outputScope(scope, language) {
     let ret = ''
     if (scope.expression == null) {                                         // Only if it is the root scope in the code
-        ret = scope.content.map( sc => outputScope(sc)).join('\n')
+        ret = scope.content.map( sc => outputScope(sc, language)).join('\n')
         return ret
     } else {
-        ret = spaces(scope.indentation) + outputNode({node: scope.expression, parentScope: scope})
-        ret = Language.outputScopeLine({
+        ret = spaces(scope.indentation) + outputNode({node: scope.expression, parentScope: scope, language: language})
+        ret = language.outputScopeLine({
             indentation:    scope.indentation,
-            scopeLine:      outputNode({node: scope.expression, parentScope: scope}),
+            scopeLine:      outputNode({node: scope.expression, parentScope: scope, language: language}),
             hasChildren:    scope.content.length > 0,
             scope:          scope
         })
         if (scope.content.length > 0) {
             ret += '\n'
-            ret += scope.content.map( sc => outputScope(sc)).join('\n') + '\n'
-            ret += Language.endScope({baseIndentation: scope.indentation, scope})
+            ret += scope.content.map( sc => outputScope(sc, language)).join('\n') + '\n'
+            ret += language.endScope({baseIndentation: scope.indentation, scope})
             return ret
         } else {
             return ret
@@ -68,9 +65,32 @@ export function outputScope(scope) {
     }
 }
 
+function joinStringsNodesBySpaces(strings) {
+    const noSpaceBefore = {
+        '.'         : true,
+    }
+    const noSpaceAfter = {
+        '.'         : true,
+        'this.'     : true
+    }
+
+    let prev = strings[0]
+    let ret = prev
+    for (let i = 1; i < strings.length; i++) {
+        let current = strings[i]
+        if (noSpaceAfter[prev] == true || noSpaceBefore[current] == true) {
+            ret += current
+        } else {
+            ret += ' ' + current
+        }
+        prev = current
+    }
+    return ret
+}
 
 class Outputter {
-    constructor(node, options = {}, scope) {
+    constructor(node, options = {}, scope, language) {
+        this.language = language
         this.scope = scope
         this.node = node
         this.mods = ''
@@ -79,9 +99,8 @@ class Outputter {
 
     output() {
         if (typeof(this.node) == 'string') {
-            return macrofy(this.node)
+            return macrofy(this.node, this.language)
         } else if (this.outputs[this.node.type] != null) {
-            //console.log(`  Going for ${this.node.type}`)
             if (this.node.accessModifiers != null && this.node.accessModifiers.length != 0) {
                 this.mods = this.node.accessModifiers.join(' ') + ' '
             }
@@ -94,15 +113,38 @@ class Outputter {
     }
 
     outputs = {
-        'OVERHEAD':         () => Language.getOverhead(this.node),
+        'OVERHEAD':         () => {
+            if (this.node.content == 1) {
+                if (isRunningInBrowser()) {
+                    this.error('Overhead is not supported in the browser version.')
+                } else {
+                    const fs = require('fs')
+                    let overheadCode = fs.readFileSync(this.node.content[0], {encoding: 'utf8', flag: 'r'})
+                    let languageResponse = this.language.getOverhead(this.node)
+                    if (languageResponse == 'use default') {
+                        return overheadCode
+                    }
+                }
+            } else {
+                this.error('The path given for overhead is null or unusual.')
+            }            
+        },
         'VARDECLARATION':   () => {
             let type = null
+            let generic = null
+            let fullType = null
             if (doesVarHaveType(this.node)) {
                 type = getVarType(this.node)
+                if (this.node.content.length == 3) {
+                    generic = outputNode({node: this.node.content[2], parentScope: this.scope, language: this.language})
+                    fullType = type + generic
+                } else {
+                    fullType = type
+                }
             }
-            let ret = Language.getVarDeclaration({
+            let ret = this.language.getVarDeclaration({
                 name: getVarName(this.node),
-                type: type,
+                type: fullType,
                 modifiers: this.node.accessModifiers,
                 expression: this.node
             })
@@ -111,10 +153,10 @@ class Outputter {
         'FUNCDECLARATION':  () => {
             let generic = null
             if (doesFuncHaveGeneric(this.node)) {
-                generic = outputNode({node: getFuncGeneric(this.node), parentScope: this.scope})
+                generic = outputNode({node: getFuncGeneric(this.node), parentScope: this.scope, language: this.language})
             }
-            let params = outputNode({node: getFuncParameters(this.node), parentScope: this.scope})
-            let ret = Language.getFunctionDeclaration({
+            let params = outputNode({node: getFuncParameters(this.node), parentScope: this.scope, language: this.language})
+            let ret = this.language.getFunctionDeclaration({
                 modifiers: this.node.accessModifiers,
                 generic: generic,
                 name: getFuncName(this.node),
@@ -125,12 +167,12 @@ class Outputter {
         },
         'CLASSDECLARATION': () => {
             if (this.node.accessModifiers != null && this.node.accessModifiers.length > 0)
-                this.mods = '/*' + this.mods + '*/'
+                this.mods = '/*' + this.mods + '*/ '
             if (doesClassHaveGeneric(this.node)) {
-                let generic = outputNode({node: getClassGeneric(this.node), parentScope: this.scope})
-                return this.mods + ' class /*' + generic + '*/ ' + getClassName(this.node)
+                let generic = outputNode({node: getClassGeneric(this.node), parentScope: this.scope, language: this.language})
+                return this.mods + 'class /*' + generic + '*/ ' + getClassName(this.node)
             } else {
-                return this.mods + ' class ' + getClassName(this.node)
+                return this.mods + 'class ' + getClassName(this.node)
             }
         },
         'DATADECLARATION': () => {
@@ -150,9 +192,9 @@ class Outputter {
 
             let parseParameterExpression = expr => {
                 let parameter = splitTypedVarIntoExpressions(expr)
-                parameter.name  = parameter.name.map(node => outputNode({node, parentScope: this.scope}))
-                parameter.type  = parameter.type?.map(node => outputNode({node, parentScope: this.scope}))
-                parameter.value = parameter.value?.map(node => outputNode({node, parentScope: this.scope}))
+                parameter.name  = parameter.name.map(node => outputNode({node, parentScope: this.scope, language: this.language}))
+                parameter.type  = parameter.type?.map(node => outputNode({node, parentScope: this.scope, language: this.language}))
+                parameter.value = parameter.value?.map(node => outputNode({node, parentScope: this.scope, language: this.language}))
                 console.log(parameter)
                 return parameter
             }
@@ -161,56 +203,81 @@ class Outputter {
                 fields.push(parseParameterExpression(expr))
             }
 
-            return Language.getDataDeclaration({indentation, className, fields, expression: this.node})
+            return this.language.getDataDeclaration({indentation, className, fields, expression: this.node})
         },
         'PAREXPRESSION':    () => {
             if (this.node.isTuple == true) {
-                return '(' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(', ') + ')'
+                return '(' + this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})).join(', ') + ')'
             } else {
-                return '(' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(' ') + ')'
+                let nodes = this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language}))
+                let ret = '(' + joinStringsNodesBySpaces(nodes) + ')'
+                return ret
             }
         },
         'INDEXEXPRESSION':      () => {
             if (this.treatIndexAsGeneric == true) return this.outputs['GENERICEXPRESSION']()
             else {
                 if (this.node.isTuple == true) {
-                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(', ') + ']'
+                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})).join(', ') + ']'
                 } else {
-                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(', ') + ']'
+                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})).join(', ') + ']'
                 }
             }
         },
         'GENERICEXPRESSION':    () => {
             if (this.node.isTuple == false)
-                return '<' + this.node.content.map( node => outputNode({node, options: {treatIndexAsGeneric: true}, parentScope: this.scope})).join(' ') + '>'
+                return '<' + joinStringsNodesBySpaces(this.node.content.map( node => outputNode({node, options: {treatIndexAsGeneric: true}, parentScope: this.scope, language: this.language}))) + '>'
             else
-                return '<' + this.node.content.map( node => outputNode({node, options: {treatIndexAsGeneric: true}, parentScope: this.scope})).join(', ') + '>'
+                return '<' + this.node.content.map( node => outputNode({node, options: {treatIndexAsGeneric: true}, parentScope: this.scope, language: this.language})).join(', ') + '>'
         },
         'EXPRESSION':   () => {
-            return this.node.content.map( node => outputNode({node, parentScope: this.scope})).join(' ')
+            return joinStringsNodesBySpaces(this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})))
         },
         'ATTRIBUTION':  () => {
-            return outputNode({node: this.node.content[0], parentScope: this.scope}) + ' = ' + outputNode({node: this.node.content[1], parentScope: this.scope})
+            let left = outputNode({
+                node:           this.node.content[0],
+                parentScope:    this.scope,
+                language:       this.language
+            })
+            let right = null
+            if (this.node.content[1].isExpression == false || this.node.content.length < 2 || this.node.content[1] == null) throw 'No right side expression at attribution? This should never happen! Worst case scenario, it should be an empty expression'
+            if (this.node.content[1].content.length == 0)
+                right = ''
+            else
+                right = outputNode({
+                    node:           this.node.content[1],
+                    parentScope:    this.scope,
+                    language:       this.language
+                })
+            return  left + ' = ' + right
         },
         'FLOWCONTROLEXPRESSION':    () => {
             let name = this.node.content[0]                     // 'if', 'while', 'switch', ...
-            let inner = outputNode({node: this.node.content[1], parentScope: this.scope})
+            let inner = outputNode({node: this.node.content[1], parentScope: this.scope, language: this.language})
             console.log({inner})
             console.log({name})
-            return Language.getFlowControlExpression({
+            return this.language.getFlowControlExpression({
                 name, inner, expression: this.node
             })
         },
         'YAMLPROPERTYVALUE':        () => {
-            let key = outputNode({node: this.node.content[0], parentScope: this.scope})
+            let key = outputNode({node: this.node.content[0], parentScope: this.scope, language: this.language})
             let value = null
             if (this.node.content.length > 1) {
                 let rightExpression = this.node.content[1]
                 if (rightExpression.content.length > 0) {
-                    value = outputNode({node: rightExpression, parentScope: this.scope})
+                    value = outputNode({node: rightExpression, parentScope: this.scope, language: this.language})
                 }
             }
-            return Language.getYAMLExpression({ key, value })
+            return this.language.getYAMLExpression({ key, value })
+        },
+        'INLINEIFEXPRESSION':       () => {
+            let condition = outputNode({ node: this.node.content[0], parentScope: this.scope, language: this.language})
+            let statement = outputNode({ node: this.node.content[1], parentScope: this.scope, language: this.language})
+            let elseStatm = outputNode({ node: this.node.content[2], parentScope: this.scope, language: this.language})
+            return this.language.getInlineIfExpression({
+                condition, ifStatement: statement, elseStatement: elseStatm
+            })
         },
         'default':      () => {
             console.log(this.node)
@@ -219,9 +286,9 @@ class Outputter {
     }
 }
 
-function macrofy(str) {
-    if (Language.macros[str] == null) return str
-    return Language.macros[str]
+function macrofy(str, language) {
+    if (language.macros[str] == null) return str
+    return language.macros[str]
 }
 
 

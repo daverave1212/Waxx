@@ -47,6 +47,11 @@ export default class ParserStates {
                 this.push(this.currentNode.content)
             }
         },
+        'FLOWCONTROL':      () => {
+            console.log(`Reached another flow control expression: ${this.currentNode}`)
+            this.branchOut('INLINEIFEXPRESSION')
+            this.branchOut('EXPRESSION', '$-inline-if-condition')
+        },
         'default':          () => {
             if (this.currentNode.isExpression == true) {
                 this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
@@ -56,9 +61,44 @@ export default class ParserStates {
         },
     }
 
+    '$-inline-if-condition' = {
+        ':':        () => {
+            this.brateIn()
+            this.branchOut('EXPRESSION', '$-inline-if-statement')
+        },
+        'default':  () => {
+            if (this.currentNode.isExpression == true) {
+                this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
+            } else {
+                this.push(this.currentNode.content)
+            }
+        }
+    }
+
+    '$-inline-if-statement' = {
+        'ELSE':     () => {
+            this.brateIn()
+            this.branchOut('EXPRESSION', '$-normal-expression')
+        },
+        'default':  () => {
+            if (this.currentNode.isExpression == true) {
+                this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
+            } else {
+                this.push(this.currentNode.content)
+            }
+        }
+    }
+
     '$-flow-control-expression' = {
         ':':        () => { this.brateIn(); this.branchOut('EXPRESSION', '$-normal-expression') },
-        'default':  () => this.push(this.currentNode.content)
+        '|':        () => { this.branchOut('PAREXPRESSION', '$-flow-control-expression') },
+        'default':  () => {
+            if (this.currentNode.isExpression == true) {
+                this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
+            } else {
+                this.push(this.currentNode.content)
+            }
+        }
     }
 
     '$-modifiers' = {
@@ -98,7 +138,7 @@ export default class ParserStates {
     }
 
     '$-expecting-function-generic' = {
-        'INDEXEXPRESSION':  () => {
+        'GENERICEXPRESSION':    () => {
             let parsed = new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse()
             parsed.type = 'GENERICEXPRESSION'
             console.log(`Switching its type from ${this.currentNode.type} to ${parsed.type}`)
@@ -107,17 +147,17 @@ export default class ParserStates {
             this.push(parsed)
             this.setState('$-expecting-function-generic')
         },
-        'ATOM':     () => this.redirectToState('$-function-name')
+        'ATOM':                 () => this.redirectToState('$-function-name')
     }
 
     '$-expecting-class-generic' = {
-        'INDEXEXPRESSION':  () => {
+        'GENERICEXPRESSION':    () => {
             let parsed = new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse()
             parsed.type = 'GENERICEXPRESSION'
             this.push(parsed)
             this.setState('$-expecting-class-generic')
         },
-        'ATOM':     () => this.redirectToState('$-class-name')
+        'ATOM':                 () => this.redirectToState('$-class-name')
     }
 
     '$-var-name' = {
@@ -140,8 +180,8 @@ export default class ParserStates {
     }
 
     '$-expecting-var-type-generic-or-equals' = {
-        '=':        () => this.redirectToState('$-expecting-attribution-equals'),
-        'INDEXEXPRESSION':  () => {
+        '=':                    () => this.redirectToState('$-expecting-attribution-equals'),
+        'GENERICEXPRESSION':    () => {
             let parsed = new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse()
             parsed.type = 'GENERICEXPRESSION'
             this.push(parsed)

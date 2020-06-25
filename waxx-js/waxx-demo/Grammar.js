@@ -1,6 +1,6 @@
 
 
-export let operators = ['!=', '!', '.', ',', '==', '<=', '>=', '(', ')', '[', ']', '=', '+', '-', '*', '/', ';', ':', '<', '>', '|']
+export let operators = ['!=', '?.', '!', '.', ',', '==', '<=', '>=', '(', ')', '[', ']', '=', '+', '-', '*', '/', ';', ':', '<', '>', '|', '{', '}']
 
 export let separators = [
     ['"', '"'],
@@ -9,7 +9,7 @@ export let separators = [
     ['`', '`']
 ]
 
-export let flowControlConditions = ['if', 'else', 'elif', 'while', 'for', 'switch']
+export let flowControlConditions = ['if', 'elif', 'while', 'for', 'switch']
 
 export let accessModifiers = [
     'public',
@@ -33,12 +33,18 @@ let tokenTypeMapping = {
     ':': ':',
     ',': ',',
     '|': '|',
+    '{': '{',
+    '}': '}',
+    '?.': '?.',
+    '.': '.',
     'o': 'VAR',
     'overhead': 'OVERHEAD',
     'class': 'CLASS',
     'data': 'DATA',
     'func': 'FUNC',
-    'yaml': 'YAML'
+    'yaml': 'YAML',
+    'else': 'ELSE',
+    'constructor': null
 }
 
 let isString = (str) => str[0] == '"' || str[0] == "'"
@@ -49,7 +55,7 @@ export function getTokenType(string) {
     if (tokenTypeMapping[string] != null)            return tokenTypeMapping[string]
     if (isString(string))                            return 'STRING'
     if (isNativeCode(string))                        return 'NATIVECODE'
-    if (this.operators.includes(string))             return 'OPERATOR'
+    if (this.operators.includes(string))             return 'OPERATOR'    
     if (this.flowControlConditions.includes(string)) return 'FLOWCONTROL'
     if (this.accessModifiers.includes(string))       return 'MODIFIER'
     return 'ATOM'

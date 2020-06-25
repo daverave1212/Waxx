@@ -8,6 +8,7 @@ import { dashCaseToCamelCase } from './Utils.js'
 class Parser extends ParserStates {
 
     constructor({givenExpression, startAt='$-root', isYAML=false}) {
+        console.log(`Parser with givenExpression: ${givenExpression}`)
         super()
         this.nodes = givenExpression.content
         this.root = new Expression(givenExpression.parent, [], givenExpression.type, givenExpression.isTuple)  // WARNING: Make sure the parent is ok!
@@ -79,7 +80,7 @@ class Parser extends ParserStates {
         }
     }
 
-    parse () {
+    parse() {
         for (let node of this.nodes) {
             this.currentNode = node
             let state = this.getCurrentState()

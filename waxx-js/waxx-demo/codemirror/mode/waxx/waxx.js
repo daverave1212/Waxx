@@ -18,7 +18,7 @@
       return obj;
     }
     var keywords = words(
-     `func class o my overhead if else switch while for import export paste public private default protected static inline const override and or xor is not isnt throw try catch null`);
+     `func class data o my overhead if else switch while for import export paste public private default protected static inline const override and or xor is not isnt throw try catch null`);
     var atoms = {"null": true};
   
     var isOperatorChar = /[+\-*&%=<>!?|\/]/;
