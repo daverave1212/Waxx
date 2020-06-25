@@ -9,7 +9,7 @@ Waxx language
 $-root:
     MODIFIER    >> $-modifiers
     FLOWCONTROL => $-flow-control-expression
-    OVERHEAD    -> $-overhead-path -> $-no-state
+    OVERHEAD    -> $-overhead-path
     VAR         >> $-var
     DATA        >> $-data-declaration
     CLASS       >> $-class-declaration
@@ -19,9 +19,18 @@ $-root:
 $-normal-expression:
     default     -> $-normal-expression
     |           => $-normal-expression (PAREXPRESSION)
-    YAML        => $-expecting-yaml-colon
+    YAML        -> $-expecting-yaml-colon
+    FLOWCONTROL => $-inline-if-condition (INLINEIFEXPRESSION)
     if isYaml:
         :       w> {wexp: YAMLPROPERTYVALUE, nexp: SAME, nst: none} <= => $-normal-expression
+
+$-inline-if-condition:
+    :           <= => $-inline-if-statement
+    default:    -> $-inline-if-condition
+
+$-inline-if-statement:
+    else        <= => $-normal-expression
+    default:    -> inline-if-statement
 
 $-flow-control-expression:
     :           <= => $-normal-expression
@@ -48,8 +57,8 @@ $-var-type:
     ATOM        -> $-expecting-var-type-generic-or-equals
 
 $-expecting-var-type-generic-or-equals:
-    =               >> $-expecting-attribution-equals
-    INDEXEXPRESSION -> $-expecting-var-type-generic-or-equals
+    =                   >> $-expecting-attribution-equals
+    GENERICEXPRESSION   -> $-expecting-var-type-generic-or-equals
 
 $-function-declaration:
     FUNC        -> $-expecting-function-generic
@@ -61,12 +70,12 @@ $-data-declaration:
     DATA        -> $-data-name
 
 $-expecting-function-generic:
-    INDEXEXPRESSION -> $-expecting-function-generic
-    ATOM            >> $-function-name
+    GENERICEXPRESSION   -> $-expecting-function-generic
+    ATOM                >> $-function-name
 
 $-class-generic:
-    INDEXEXPRESSION -> $-class-generic
-    ATOM            => $-class-name
+    GENERICEXPRESSION   -> $-class-generic
+    ATOM                => $-class-name
 
 $-class-name:
     ATOM        -> ...
@@ -92,7 +101,8 @@ $-expecting-nothing:
 $-expecting-attribution-equals:
     =           w> {wexp: ATTRIBUTION, nexp: SAME, nst: none} <= => $-normal-expression
 
-
+$-overhead-path:
+    STRING      -> $-no-state
 
 
 ## Legend:
@@ -134,6 +144,24 @@ _ YAML :                                          -> parses yaml
 
 
 ## Features mentioned in the thesis:
-- my
 - overhead ...
-- data class
+
+
+
+
+
+
+
+Expression(_):                 ( _ )
+Type(atom, Type):              : atom [ { Type } ]
+Vardecl(atom, Type, _):        var atom Type [ = _ ]
+
+var x : Array{Int} = new
+
+    Vardecl
+        var
+        atom
+
+
+
+

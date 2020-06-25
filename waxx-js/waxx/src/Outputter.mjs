@@ -118,7 +118,7 @@ class Outputter {
                 if (isRunningInBrowser()) {
                     this.error('Overhead is not supported in the browser version.')
                 } else {
-                    const fs = require('fs')
+                    import * as fs from 'fs'
                     let overheadCode = fs.readFileSync(this.node.content[0], {encoding: 'utf8', flag: 'r'})
                     let languageResponse = this.language.getOverhead(this.node)
                     if (languageResponse == 'use default') {
