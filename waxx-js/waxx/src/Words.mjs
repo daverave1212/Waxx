@@ -1,6 +1,5 @@
 
-import * as Grammar from './Grammar.js'
-import { spaces } from './Utils.js'
+import { spaces } from './Utils.mjs'
 
 function readFileIntoLines(fileName){
     return fs.readFileSync(fileName, 'utf8').split(os.EOL)

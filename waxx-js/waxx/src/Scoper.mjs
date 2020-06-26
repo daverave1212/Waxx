@@ -1,5 +1,5 @@
 
-import { spaces } from './Utils.js'
+import { spaces } from './Utils.mjs'
 
 // A scope represents 
 class Scope {

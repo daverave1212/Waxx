@@ -1,6 +1,18 @@
 
 String.prototype.toJsonObject = function() { return this }
 
+class Node {
+    constructor(content, type='none') {
+        this.content = content
+        this.type = type
+        this.isNode = true
+    }
+    toString() { return this.content }
+    clone() {
+        return new Node(this.content, this.type)
+    }
+}
+
 class Expression {
     constructor(parent, content, type, isTuple=false) {
         this.parent = parent
@@ -75,18 +87,6 @@ class Expression {
                 console.log(`WARNING: Expression type '${this.type}' not handled. Returning as normal expression`)
                 return '(' + mods + contentStrings.join(' ') + ')'
         }
-    }
-}
-
-class Node {
-    constructor(content, type='none') {
-        this.content = content
-        this.type = type
-        this.isNode = true
-    }
-    toString() { return this.content }
-    clone() {
-        return new Node(this.content, this.type)
     }
 }
 

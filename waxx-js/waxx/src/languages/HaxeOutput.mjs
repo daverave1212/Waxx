@@ -1,5 +1,5 @@
 
-import { spaces } from '../Utils.js'
+import { spaces } from '../Utils.mjs'
 
 let error = message => {
     alert(message)

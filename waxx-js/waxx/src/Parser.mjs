@@ -1,9 +1,6 @@
 
-import ParserStates from './ParserStates.js'
-// import * as Words from './Words.js'
-// import * as Grammar from './Grammar.js'
-import { Expression } from './Expressions.js'
-import { dashCaseToCamelCase } from './Utils.js'
+import ParserStates from './ParserStates.mjs'
+import { Expression } from './Expressions.mjs'
 
 class Parser extends ParserStates {
 

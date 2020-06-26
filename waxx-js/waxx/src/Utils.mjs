@@ -1,21 +1,6 @@
 
 
-function splitArrayByIndicesExclusive(array, indices) {
-    if (indices.length == 0) {
-        console.log('No indices given.')
-        return [array]
-    }
-    let parts = []
-    let start = 0
-    for (let index of indices) {
-        let part = array.slice(start, index)
-        if (part != null && part.length > 0) parts.push(part)
-        start = index + 1
-    }
-    let finalPart = array.slice(start, array.length)
-    if (finalPart != null && finalPart.length > 0) parts.push(finalPart)
-    return parts
-}
+
 
 const capitalize = (s) => {
     if (typeof s !== 'string') return ''
@@ -43,14 +28,35 @@ function isSpace(text) {
 }
 
 function isRunningInBrowser() {
-    if (window == null) return false
-    return true
+    try {
+        let x = window
+        return true
+    } catch (e) {
+        return false
+    }
 }
 
 function doTimes(times, func) {
     for (let i = 1; i<=times; i++) {
         func()
     }
+}
+
+function splitArrayByIndicesExclusive(array, indices) {
+    if (indices.length == 0) {
+        console.log('No indices given.')
+        return [array]
+    }
+    let parts = []
+    let start = 0
+    for (let index of indices) {
+        let part = array.slice(start, index)
+        if (part != null && part.length > 0) parts.push(part)
+        start = index + 1
+    }
+    let finalPart = array.slice(start, array.length)
+    if (finalPart != null && finalPart.length > 0) parts.push(finalPart)
+    return parts
 }
 
 export { spaces, dashCaseToCamelCase, capitalize, isSpace, splitArrayByIndicesExclusive, isRunningInBrowser, doTimes }

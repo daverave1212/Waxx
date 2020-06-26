@@ -1,20 +1,17 @@
 
 
-import { Word, WordLine } from './Words.js'
-import { isSpace } from './Utils.js'
+import { Word, WordLine } from './Words.mjs'
+import { isSpace } from './Utils.mjs'
 
 function splitLines(lines, operators, separators){
     return (new Lexer(lines, operators, separators)).parse()
 }
 
-function isSubstringAt(sub, str, start=0){
-    return str.startsWith(sub, start)
-}
-
 function isAnySubstringAt(subs, str, start){
     for (let i = 0; i < subs.length; i++) {
         let sub = subs[i]
-        let result = isSubstringAt(sub, str, start)
+        let result = str.startsWith(sub, start)
+        //let result = isSubstringAt(sub, str, start)
         if (result == true) {
             return i
         }
@@ -30,21 +27,22 @@ function isOperator(text, position, operators) {
     return null
 }
 
-// Checks if text[position:] starts with any of the possible string separators
-// Returns the separators as a string, or None
-function startsString(text, position, separators) {
-    let sepsStart = separators.map( pair => pair[0] )
+// Checks if text[position:] starts with any of the possible string openSeparators
+// Returns the openSeparators as a string, or None
+function startsString(text, position, openSeparators) {
+    let sepsStart = openSeparators.map( pair => pair[0] )
     let result = isAnySubstringAt(sepsStart, text, position)    // All 'operators' that start a string
     if (result != null) {
-        return separators[result]
+        return openSeparators[result]
     }
     return null
 }
 
 
 // Checks if text[position:] is equal to the given separator
-function endsString(text, position, separator) {
-    let result = isSubstringAt(separator, text, position)
+function endsString(text, position, closeSeparator) {
+    let result = text.startsWith(closeSeparator, position)
+    //let result = isSubstringAt(separator, text, position)
     if (result != null) return result
     return null
 }

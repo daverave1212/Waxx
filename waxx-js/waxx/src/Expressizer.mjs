@@ -1,9 +1,7 @@
 
 
-import { Word, WordLine } from './Words.js'
-import { Expression, Node } from './Expressions.js'
-import * as Grammar from './Grammar.js'
-import { dashCaseToCamelCase } from './Utils.js'
+import { Expression, Node } from './Expressions.mjs'
+import { dashCaseToCamelCase } from './Utils.mjs'
 
 class ExpressizerStates {
 
@@ -29,7 +27,6 @@ class ExpressizerStates {
             this.currentExpression.isTuple = true
             if (this.currentExpression.type == 'PAREXPRESSION') {
                 this.wrapOver({
-                    wrapperExpressionType: this.currentExpression.type,
                     newExpressionType: 'EXPRESSION',
                     nextState: '$-par-tuple-expression'
                 })
@@ -37,7 +34,6 @@ class ExpressizerStates {
                 this.branchOut('EXPRESSION', '$-par-tuple-expression')
             } else if (this.currentExpression.type == 'INDEXEXPRESSION') {
                 this.wrapOver({
-                    wrapperExpressionType: this.currentExpression.type,
                     newExpressionType: 'EXPRESSION',
                     nextState: '$-index-tuple-expression'
                 })
@@ -45,7 +41,6 @@ class ExpressizerStates {
                 this.branchOut('EXPRESSION', '$-index-tuple-expression')
             } else if (this.currentExpression.type == 'GENERICEXPRESSION') {
                 this.wrapOver({
-                    wrapperExpressionType: this.currentExpression.type,
                     newExpressionType: 'EXPRESSION',
                     nextState: '$-generic-tuple-expression'
                 })
@@ -149,16 +144,50 @@ class Expressizer extends ExpressizerStates {
         this.currentExpression = this.currentExpression.parent
     }
 
-    wrapOver ({wrapperExpressionType, newExpressionType, nextState}) {   // Takes the current expression's content and modifiers, creates a new expression and puts those in the new expression; also changes state
-        if (wrapperExpressionType != null)
-            this.currentExpression.type = wrapperExpressionType
-        let accessModifiers = this.currentExpression.accessModifiers
-        let content = this.currentExpression.content
-        this.currentExpression.accessModifiers = []
-        this.currentExpression.content = []
-        let newExpression = new Expression(this.currentExpression, content, newExpressionType)
-        newExpression.accessModifiers = accessModifiers
-        this.currentExpression.content = [newExpression]
+    _wrapOver ({wrapperExpressionType, newExpressionType, nextState}) {  // Assuming it has a parent
+        let parentExpression = this.currentExpression.parent
+        if (parentExpression == null) throw 'Tuples at base level in a code line are not supported yet. Please wrap them in parentheses for now.'
+        let currentExpressionIndexInParent = parentExpression.content.findIndex(elem => elem == this.currentExpression)
+        let wrapperExpression = new Expression(
+            parentExpression,
+            [this.currentExpression],
+            wrapperExpressionType
+        )
+        parentExpression.content[currentExpressionIndexInParent] = wrapperExpression
+        this.currentExpression.parent   = wrapperExpression
+        this.currentExpression.type     = newExpressionType
+        
+        //this.currentExpression          = wrapperExpression
+
+        this.stateStack.push(nextState)
+    }
+
+    __wrapOver ({wrapperExpressionType, newExpressionType, nextState}) {
+        let newExpression = new Expression(
+            this.currentExpression,
+            this.currentExpression.content,
+            newExpressionType
+        )
+        newExpression.accessModifiers = this.currentExpression.accessModifiers
+
+        this.currentExpression.content          = [newExpression]
+        this.currentExpression.accessModifiers  = []
+        this.currentExpression.type             = wrapperExpressionType
+
+        this.stateStack.push(nextState)
+    }
+
+    wrapOver ({newExpressionType, nextState}) {   // Takes the current expression's content and modifiers, creates a new expression and puts those in the new expression; also changes state
+        let newExpression = new Expression(
+            this.currentExpression,
+            this.currentExpression.content,
+            newExpressionType
+        )
+        newExpression.accessModifiers = this.currentExpression.accessModifiers
+        
+        this.currentExpression.accessModifiers  = []
+        this.currentExpression.content          = [newExpression]
+
         this.currentExpression = newExpression
         this.stateStack.push(nextState)
     }

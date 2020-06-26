@@ -1,5 +1,5 @@
 
-import * as Grammar from './Grammar.js'
+import * as Grammar from './Grammar.mjs'
 
 export function assignTypesToWordsInWordLines(wordLines) {
     for (let wordLine of wordLines) {

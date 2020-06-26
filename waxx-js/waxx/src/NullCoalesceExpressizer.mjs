@@ -1,8 +1,8 @@
 
 
-import { doTimes } from './Utils.js'
-import { Expression, Node  } from './Expressions.js'
-import * as Grammar from './Grammar.js'
+import { doTimes } from './Utils.mjs'
+import { Expression, Node  } from './Expressions.mjs'
+import * as Grammar from './Grammar.mjs'
 
 class NullCoalesceExpressizer {
     

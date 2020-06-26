@@ -1,9 +1,11 @@
  
-import { spaces, splitArrayByIndicesExclusive, isRunningInBrowser } from './Utils.js'
+import { spaces, splitArrayByIndicesExclusive, isRunningInBrowser } from './Utils.mjs'
 
+let fs = null
+if (!isRunningInBrowser()) {
+    import('fs').then(_fs => fs = _fs)
+}
 
-//let Language = new JSOutput.LanguageOutputter()
-//let Language = new PythonOutput.LanguageOutputter()
 
 let error = message => {
     throw message
@@ -118,7 +120,6 @@ class Outputter {
                 if (isRunningInBrowser()) {
                     this.error('Overhead is not supported in the browser version.')
                 } else {
-                    import * as fs from 'fs'
                     let overheadCode = fs.readFileSync(this.node.content[0], {encoding: 'utf8', flag: 'r'})
                     let languageResponse = this.language.getOverhead(this.node)
                     if (languageResponse == 'use default') {

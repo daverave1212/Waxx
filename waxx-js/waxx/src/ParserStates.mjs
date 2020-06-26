@@ -1,5 +1,5 @@
 
-import { Parser } from './Parser.js'
+import { Parser } from './Parser.mjs'
 
 export default class ParserStates {
 

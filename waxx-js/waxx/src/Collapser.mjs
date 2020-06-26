@@ -1,6 +1,6 @@
 
 
-import { Word, WordLine } from './Words.js'
+import { Word, WordLine } from './Words.mjs'
 
 
 // Parses tokens; when it finds a parenthesis and it's pair is on a different line,

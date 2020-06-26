@@ -1,26 +1,21 @@
 
-import * as Words from './Words.js'
-import * as Grammar from './Grammar.js'
-import * as Splitter from './Splitter.js'
-import * as Parenthesiser from './Parenthesiser.js'
-import * as Collapser from './Collapser.js'
-import * as WordTypeAssigner from './WordTypeAssigner.js'
+import * as Grammar from './Grammar.mjs'
+import * as Splitter from './Splitter.mjs'
+import * as Parenthesiser from './Parenthesiser.mjs'
+import * as Collapser from './Collapser.mjs'
+import * as WordTypeAssigner from './WordTypeAssigner.mjs'
 
-import * as Parser from './Parser.js'
-import * as Scoper from './Scoper.js'
-import * as Expressizer from './Expressizer.js'
+import * as Parser from './Parser.mjs'
+import * as Scoper from './Scoper.mjs'
+import * as Expressizer from './Expressizer.mjs'
 
-import * as NullCoalesceExpressizer from './NullCoalesceExpressizer.js'
+import * as NullCoalesceExpressizer from './NullCoalesceExpressizer.mjs'
 
-import * as Outputter from './Outputter.js'
+import * as Outputter from './Outputter.mjs'
 
-import * as JSLanguage from './languages/JSOutput.js'
-import * as PythonLanguage from './languages/PythonOutput.js'
-import * as HaxeLanguage from './languages/HaxeOutput.js'
-
-function getLines(){
-    return document.getElementById('TextArea').value.split('\n')
-}
+import * as JSLanguage from './languages/JSOutput.mjs'
+import * as PythonLanguage from './languages/PythonOutput.mjs'
+import * as HaxeLanguage from './languages/HaxeOutput.mjs'
 
 export function go(sourceCode, languageString) {
     let stringLines = sourceCode.split('\n')    // Get the source code and split it into lines for parsing
@@ -34,14 +29,14 @@ export function go(sourceCode, languageString) {
     //console.log({wordLines})
 
     let expressionsWithIndentation = Expressizer.expressizeWordLinesByParentheses(wordLines)    // The first part of parsing. Simple Words become Nodes. Everything between parentheses becomes an Expression containing those Nodes or other Expressions (recursively)
-    console.log(expressionsWithIndentation.map(ewi => ewi.expression))
+    //console.log(expressionsWithIndentation.map(ewi => ewi.expression))
     
     expressionsWithIndentation = expressionsWithIndentation.map(({expression, indentation}) => ({
         indentation: indentation,
         expression: NullCoalesceExpressizer.nullCoalesceExpressize(expression)
     }))
 
-    console.log(expressionsWithIndentation.map(ewi => ewi.expression))
+    //console.log(expressionsWithIndentation.map(ewi => ewi.expression))
 
     let baseScope = Scoper.scopify(expressionsWithIndentation)                                  // Takes the expressions generated and just puts them in a hierarchy based on their indentation, like python code.
 
@@ -56,9 +51,11 @@ export function go(sourceCode, languageString) {
         case 'javascript':
             language = new JSLanguage.LanguageOutputter()
             break
+        case 'py':
         case 'python':
             language = new PythonLanguage.LanguageOutputter()
             break
+        case 'hx':
         case 'haxe':
             language = new HaxeLanguage.LanguageOutputter()
             break
