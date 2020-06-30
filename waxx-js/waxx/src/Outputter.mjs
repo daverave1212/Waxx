@@ -68,6 +68,12 @@ export function outputScope(scope, language) {
 }
 
 function joinStringsNodesBySpaces(strings) {
+    if (strings.length == 0) {
+        return ''
+    }
+    if (strings.length == 1) {
+        return strings[0]
+    }
     const noSpaceBefore = {
         '.'         : true,
     }
