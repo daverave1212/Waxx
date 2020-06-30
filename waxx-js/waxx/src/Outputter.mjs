@@ -227,7 +227,7 @@ class Outputter {
                 if (this.node.isTuple == true) {
                     return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})).join(', ') + ']'
                 } else {
-                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})).join(', ') + ']'
+                    return '[' + this.node.content.map( node => outputNode({node, parentScope: this.scope, language: this.language})).join(' ') + ']'
                 }
             }
         },

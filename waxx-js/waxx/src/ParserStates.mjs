@@ -26,10 +26,7 @@ export default class ParserStates {
         }
     }
 
-    '$-normal-expression' = {
-        '|':                () => {
-            this.branchOut('PAREXPRESSION', '$-normal-expression')
-        },        
+    '$-normal-expression' = {      
         'YAML':             () => {
             this.setState('$-expecting-yaml-colon')
             this.areChildScopesYAML = true
@@ -91,7 +88,6 @@ export default class ParserStates {
 
     '$-flow-control-expression' = {
         ':':        () => { this.brateIn(); this.branchOut('EXPRESSION', '$-normal-expression') },
-        '|':        () => { this.branchOut('PAREXPRESSION', '$-flow-control-expression') },
         'default':  () => {
             if (this.currentNode.isExpression == true) {
                 this.push(new Parser({givenExpression: this.currentNode, startAt: '$-normal-expression'}).parse())
