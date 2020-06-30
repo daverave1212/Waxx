@@ -17,14 +17,12 @@ let args = process.argv.slice(2)
 
 console.log(args)
 
-if (args.length < 2)
-    throw 'This CLI takes 2 arguments: <language> <file>. See "help" for more information.'
-
 if (['help', '--help', '-h'].includes(args[0])) {
     console.log('Argument #1: the language [js | py | hx | (javascript | python | haxe]')
     console.log('Argument #2: the path to your waxx source file [_.wx | _.waxx | _.xx]')
     process.exit()
-}
+} else if (args.length < 2)
+    throw 'This CLI takes 2 arguments: <language> <file>. See "help" for more information.'
 
 let options = {
     language: languages[args[0]],

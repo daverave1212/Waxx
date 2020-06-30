@@ -7,19 +7,68 @@
     <script src="codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="codemirror/lib/codemirror.css">
     <link rel="stylesheet" href="codemirror/theme/neat.css">
-    <script src="codemirror/mode/waxx/waxx.js"></script>    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="page/style.css">
+    
+    <script src="codemirror/mode/waxx/waxx.js"></script>
+    <script src="codemirror/mode/javascript/javascript.js"></script>
+    <script src="codemirror/mode/python/python.js"></script>
+    <script src="codemirror/mode/haxe/haxe.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+    <link rel="icon" type="image/png" href="page/logo_32.png">
+
+    <meta charset="UTF-8">
+    <meta name="description" content="Waxx">
+    <meta name="keywords" content="HTML, CSS, JavaScript">
+    <meta name="author" content="Irimia Ioan-David">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Waxx</title>
 </head>
 
-<style>
-    button {
-        width: 581px;
-        height: 200px;
-    }
-</style>
 
 <body>
-    <textarea id="TextArea" rows="40" cols="80">
 
+    <nav class="navbar navbar-expand-lg navbar-light bg-light bg-dark">
+
+        <a class="navbar-brand" href="#"><img src="page/logo_no_stroke_no_spacing.png"></a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link text-secondary  disabled" href="#">Examples<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="https://github.com/daverave1212/Waxx">Source Code</a>
+                </li>
+            </ul>
+
+        </div>
+
+    </nav>
+
+    <div id="Page-Prebody">
+        <div class="page-body-half no-border" id="Compile-Menu">
+            <button id="Go-Button" type="button" class="btn btn-primary">Compile me some Waxx!</button>
+            <select>
+                <option value="js">JavaScript</option>
+                <option value="py">Python</option>
+                <option value="hx">Haxe</option>
+            </select>
+        </div>
+        <div class="page-body-half no-border">
+            <button id="Run-Code-Button" type="button" class="btn btn-primary">Run this code</button>
+        </div>
+    </div>
+    <div id="Page-Body">
+        <div class="page-body-half">
+            <textarea id="In-Text-Area" rows="40" cols="80">
 
 class Fibber
 
@@ -38,36 +87,59 @@ class Fibber
 o fibber = new Fibber()
 
 alert | fibber.next | 4
-   
-        
-    </textarea>
-    <br>
-    <button id="Button">Go!</button>
-    <br>
-    <textarea id="Output" rows="30" cols="80">
 
+            </textarea>
+        </div>
+        <div class="page-body-half">
+            <textarea id="Out-Text-Area" rows="40" cols="80">
+Compile your code first!                
+            </textarea>
+        </div>
+    </div>
 
-    </textarea>
-
-    <!---------- CodeMirror  ------------>
-    <script>
-        
-    </script>
     <!---------- Base Script ------------->
     <script type="module">
 
         import * as index from './src/index.mjs'
 
-        var codeArea = CodeMirror.fromTextArea(document.getElementById("TextArea"), {
+
+        let languageSelect = document.querySelector('select')
+        let runButton = document.querySelector('#Run-Code-Button')
+        languageSelect.addEventListener('change', _ => {
+            let selectedOption = languageSelect.options[languageSelect.selectedIndex].value
+            if (selectedOption != 'js') {
+                runButton.disabled = true
+            } else {
+                runButton.disabled = false
+            }
+        })
+
+        let inCodeArea = CodeMirror.fromTextArea(document.getElementById("In-Text-Area"), {
             lineNumbers: true,
             mode: 'waxx',
             theme: 'neat'
         });
 
-        document.getElementById('Button').addEventListener('click', _ => {
-            let myCode = index.go(codeArea.getValue(), 'js')
-            document.getElementById('Output').innerHTML = myCode
-            eval(myCode)
+        let outCodeArea = CodeMirror.fromTextArea(document.getElementById("Out-Text-Area"), {
+            lineNumbers: true,
+            mode: 'javascript',
+            theme: 'neat'
+        });
+
+        document.getElementById('Go-Button').addEventListener('click', _ => {
+            let language = languageSelect.options[languageSelect.selectedIndex].value
+            let myCode = index.go(inCodeArea.getValue(), language)
+            let languageMap = {
+                'js': 'javascript',
+                'py': 'python',
+                'hx': 'haxe'
+            }
+            outCodeArea.setOption('mode', languageMap[language])
+            outCodeArea.setValue(myCode)
+        })
+
+        document.getElementById('Run-Code-Button').addEventListener('click', _ => {
+            eval(outCodeArea.getValue())
         })
     </script>
 </body>

@@ -1,0 +1,55 @@
+
+@font-face {
+    font-family: nunito;
+    src: url(nunito.ttf);
+}
+
+body {
+    font-family: nunito;
+}
+
+nav a img {
+    height: 42px;
+}
+
+.navbar-nav > li{
+    padding-left: 30px;
+    padding-right: 30px;
+    font-size: 125%;
+}
+
+#Page-Body, #Page-Prebody {
+    width: 90%;
+    margin: auto;
+    margin-top: 16px;
+    display: flex;
+}
+
+#Compile-Menu {
+    display: flex;
+    height: 48px;
+}
+#Compile-Menu > * {
+    margin-right: 8px;
+}
+
+#Go-Button, #Run-Code-Button {
+    background-color: #349fed !important;
+    height: 100%;
+}
+
+select {
+    border-radius: 5px;
+    font-family: nunito;
+    padding: 6px;
+}
+
+.page-body-half {
+    flex: 1;
+    border: solid #eeeeee 1px;
+    border-radius: 5px;
+    padding: 2px;
+}
+.no-border {
+    border: none;
+}
