@@ -50,6 +50,16 @@ select {
     border-radius: 5px;
     padding: 2px;
 }
+
+@media only screen and (max-width: 1100px) {
+    #Page-Body {
+        display: block;
+    }
+    .page-body-half {
+        display: block;
+    }
+  }
+
 .no-border {
     border: none;
 }

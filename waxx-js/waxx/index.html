@@ -41,8 +41,13 @@
       
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                    <a class="nav-link text-secondary  disabled" href="#">Examples<span class="sr-only">(current)</span></a>
+                <li class="nav-item active dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link text-light dropdown-toggle" id="Dropdown-Examples-Button" href="#">
+                        Examples
+                    </a>
+                    <div id="Dropdown-Items" class="dropdown-menu" aria-labelledby="Dropdown-Examples-Button">
+
+                    </div>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-light" href="https://github.com/daverave1212/Waxx">Source Code</a>
@@ -120,6 +125,8 @@ Compile your code first!
             theme: 'neat'
         });
 
+        window.inCodeArea = inCodeArea
+
         let outCodeArea = CodeMirror.fromTextArea(document.getElementById("Out-Text-Area"), {
             lineNumbers: true,
             mode: 'javascript',
@@ -141,5 +148,91 @@ Compile your code first!
         document.getElementById('Run-Code-Button').addEventListener('click', _ => {
             eval(outCodeArea.getValue())
         })
+    </script>
+
+
+    <script>
+        let examples = {
+            'Variable Declaration (simple)': `o x = 20`,
+            'Variable Declaration (types)': `
+o name : String = 'Daisy'
+o dogs : Array{String} = ['Daisy', 'Lord', 'Ozzy']
+            `,
+            'If and Else':`
+o hasDog = true
+if hasDog is true
+    alert('Yes, I have a dog')
+else
+    alert('No :(')
+            `,
+            'Elif': `
+o x = 20
+if x is 10
+    alert('No')
+elif x is 15
+    alert('Ok')
+            `,
+            'For (language specific)': `
+o dogs = ['Daisy', 'Lord', 'Ozzy']
+
+for o dog of dogs
+    console.log("Haxe and JS " + dog)
+
+for dog in dogs
+    console.log("Python " + dog)`,
+            'Functions': `
+func sayHello(name : String)
+    alert('Hello, ' + name)
+            `,
+            'Classes' : `
+class Dog
+    o name = 'None'
+    o age : Int
+
+    func bark()
+        alert('Woof!')
+    
+    static func makeDog()
+        return new Dog()
+
+    # func __init__(name)
+    # func new(name)
+    func constructor(name)
+        my name = name`,
+        'Pipe Operator (1)': `alert | Math.sqrt | 4`,
+        'Pipe Operator (2)': `alert | sum(Math.sqrt | 4, 2)`,
+        'Pipe Operator (3)': `
+func sayHello | name, country
+    alert | 'Hello! I am ' + name + ' and I am from ' + country`,
+            'Inline if': `
+o dog = 'Daisy'
+o owner = if dog is 'Daisy': 'David' else 'Someone else'`,
+            'Null Coalescing Operator': `
+alert | window?.chrome?.toString()
+            `,
+            'Data Classes': `
+data Dog(name : String, age = 0, isMale : Boolean = false)
+            `,
+            'YAML': `
+o dog = yaml:
+    name: 'Daisy'
+    owner:
+        name: 'David'
+        age: 22
+    home: 'Romania'
+            `
+        }
+
+        for (let key of Object.keys(examples)) {
+            let a = document.createElement('a')
+            a.setAttribute('href', '#')
+            a.innerHTML = key
+            a.classList.add('dropdown-item')
+            a.addEventListener('click', function() {
+                window.inCodeArea.setValue(examples[this.innerHTML])
+                document.getElementById('Go-Button').click()
+            })
+            document.getElementById('Dropdown-Items').appendChild(a)
+        }
     </script>
 </body>
