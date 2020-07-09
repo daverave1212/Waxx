@@ -2,6 +2,50 @@
 
 export let operators = ['!=', '?.', '!', '.', ',', '==', '<=', '>=', '(', ')', '[', ']', '=', '+', '-', '*', '/', ';', ':', '<', '>', '|', '{', '}']
 
+export let keywordTypeMapping = {
+    'if':           'FLOWCONTROL',
+    'elif':         'FLOWCONTROL',
+    'while':        'FLOWCONTROL',
+    'for':          'FLOWCONTROL',
+    'switch':       'FLOWCONTROL',
+    'public':       'MODIFIER',
+    'private':      'MODIFIER',
+    'protected':    'MODIFIER',
+    'inline':       'MODIFIER',
+    'final':        'MODIFIER',
+    'static':       'MODIFIER',
+    'override':     'MODIFIER',
+    'o':            'VAR',
+    'overhead':     'OVERHEAD',
+    'class':        'CLASS',
+    'data':         'DATA',
+    'func':         'FUNC',
+    'yaml':         'YAML',
+    'else':         'ELSE',
+    'constructor':  null
+}
+
+export let operatorTypeMapping = {
+    '[': '[',
+    ']': ']',
+    '(': '(',
+    ')': ')',
+    '=': '=',
+    ':': ':',
+    ',': ',',
+    '|': '|',
+    '{': '{',
+    '}': '}',
+    '?.': '?.',
+    '.': '.',
+}
+for (let key of Object.keys(operators)) {
+    if (operatorTypeMapping[key] == null) {
+        operatorTypeMapping[key] = 'OPERATOR'
+    }
+}
+
+
 export let separators = [
     ['"', '"'],
     ["'", "'"],

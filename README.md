@@ -18,7 +18,6 @@ $-root:
 
 $-normal-expression:
     default     -> $-normal-expression
-    |           => $-normal-expression (PAREXPRESSION)
     YAML        -> $-expecting-yaml-colon
     FLOWCONTROL => $-inline-if-condition (INLINEIFEXPRESSION)
     if isYaml:
@@ -64,7 +63,7 @@ $-function-declaration:
     FUNC        -> $-expecting-function-generic
 
 $-class-declaration:
-    CLASS       -> $-expecting-class-generic
+    CLASS       -> $-class-generic
 
 $-data-declaration:
     DATA        -> $-data-name
@@ -122,7 +121,6 @@ ATOM                            = ATOM
 [EXPRESSION, EXPRESSION, ...]   = Expr INDEXEXPRESSION: content=EXPRESSION,EXPRESSION,...  isTuple=true
 
 ## Allowed Structures:
-
 [MODIFIER]* VAR ATOM                            = Expr VARDECLARATION: content=ATOM
 [MODIFIER]* VAR ATOM1 [: ATOM2]                 = Expr VARDECLARATION: content=ATOM1,ATOM2
 [MODIFIER]* VAR ATOM1 [: ATOM2 INDEXEXPRESSION] = Expr VARDECLARATION: content=ATOM1,ATOM2,GENERICEXPRESSION
