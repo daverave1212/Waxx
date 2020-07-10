@@ -16,6 +16,7 @@ let getFuncName = expr => doesFuncHaveGeneric(expr)? expr.content[1]: expr.conte
 let getFuncGeneric = expr => doesFuncHaveGeneric(expr)? expr.content[0]: error(`This function has no generic`)
 let getFuncParameters = expr => expr.content.filter( elem => elem.type == 'PAREXPRESSION')[0]
 
+
 let doesClassHaveGeneric = doesFuncHaveGeneric
 let getClassName = getFuncName
 let getClassGeneric = getFuncGeneric
@@ -30,16 +31,36 @@ function outputNode({node, options, parentScope, language}) {
 }
 
 function splitTypedVarIntoExpressions(expression) {
+    console.log('Expression:')
+    console.log(expression)
     if (expression == null) throw 'Null expression given'
     if (expression.content.length == 0) throw 'Empty expression given'
     let colonPosition = expression.content.findIndex(e => e == ':')
     let equalPosition = expression.content.findIndex(e => e == '=')
     let splitPositions = [colonPosition, equalPosition].filter(i => i != -1)
     let expressions = splitArrayByIndicesExclusive(expression.content, splitPositions)
-    return {
+    let ret = {
         name : expressions[0],
         type : expressions.length > 1 ? expressions[1] : null,
         value : expressions.length > 2 ? expressions[2] : null
+    }
+    console.log('Returning')
+    console.log(ret)
+    return ret
+}
+function parseParameterExpression(expr, scope, language) {
+    let parameter = splitTypedVarIntoExpressions(expr)
+    parameter.name  = joinStringsNodesBySpaces(parameter.name.map(node => outputNode({node, parentScope: scope, language: language})))
+    parameter.type  = (parameter.type == null)  ? null : joinStringsNodesBySpaces(parameter.type?.map(node => outputNode({node, parentScope: scope, language: language})))
+    parameter.value = (parameter.value == null) ? null : joinStringsNodesBySpaces(parameter.value?.map(node => outputNode({node, parentScope: scope, language: language})))
+    return parameter
+}
+
+function getParameters(fullParameterExpression, scope, language) {
+    if (fullParameterExpression.isTuple) {
+        return fullParameterExpression.content.map(expr => parseParameterExpression(expr, scope, language))
+    } else {
+        return [parseParameterExpression(fullParameterExpression, scope, language)]
     }
 }
 
@@ -162,7 +183,12 @@ class Outputter {
             if (doesFuncHaveGeneric(this.node)) {
                 generic = outputNode({node: getFuncGeneric(this.node), parentScope: this.scope, language: this.language})
             }
-            let params = outputNode({node: getFuncParameters(this.node), parentScope: this.scope, language: this.language})
+            let functionParametersExpression = getFuncParameters(this.node)
+            
+            let params = getParameters(functionParametersExpression, this.scope, this.language)
+            console.log('Got parameters as:')
+            console.log({params})
+            
             let ret = this.language.getFunctionDeclaration({
                 modifiers: this.node.accessModifiers,
                 generic: generic,
@@ -197,17 +223,8 @@ class Outputter {
             else
                 expressionsToParse = [body.content[0]]
 
-            let parseParameterExpression = expr => {
-                let parameter = splitTypedVarIntoExpressions(expr)
-                parameter.name  = parameter.name.map(node => outputNode({node, parentScope: this.scope, language: this.language}))
-                parameter.type  = parameter.type?.map(node => outputNode({node, parentScope: this.scope, language: this.language}))
-                parameter.value = parameter.value?.map(node => outputNode({node, parentScope: this.scope, language: this.language}))
-                console.log(parameter)
-                return parameter
-            }
-
             for (let expr of expressionsToParse) {
-                fields.push(parseParameterExpression(expr))
+                fields.push(parseParameterExpression(expr, this.scope, this.language))
             }
 
             return this.language.getDataDeclaration({indentation, className, fields, expression: this.node})
@@ -265,6 +282,11 @@ class Outputter {
             console.log({name})
             return this.language.getFlowControlExpression({
                 name, inner, expression: this.node
+            })
+        },
+        'ELSEEXPRESSION':           () => {
+            return this.language.getElseExpression({
+                expression: this.node
             })
         },
         'YAMLPROPERTYVALUE':        () => {

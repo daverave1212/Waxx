@@ -169,7 +169,7 @@ else
 o x = 20
 if x is 10
     alert('No')
-elif x is 15
+elif x is 20
     alert('Ok')
             `,
             'For (language specific)': `
@@ -200,7 +200,7 @@ class Dog
     func constructor(name)
         my name = name`,
         'Pipe Operator (1)': `alert | Math.sqrt | 4`,
-        'Pipe Operator (2)': `alert | sum(Math.sqrt | 4, 2)`,
+        'Pipe Operator (2)': `alert | sum(Math.pow | 4, 2)`,
         'Pipe Operator (3)': `
 func sayHello | name, country
     alert | 'Hello! I am ' + name + ' and I am from ' + country`,
@@ -208,7 +208,7 @@ func sayHello | name, country
 o dog = 'Daisy'
 o owner = if dog is 'Daisy': 'David' else 'Someone else'`,
             'Null Coalescing Operator': `
-alert | window?.chrome?.toString()
+alert | window?.chrome?.app
             `,
             'Data Classes': `
 data Dog(name : String, age = 0, isMale : Boolean = false)

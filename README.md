@@ -9,6 +9,7 @@ Waxx language
 $-root:
     MODIFIER    >> $-modifiers
     FLOWCONTROL => $-flow-control-expression
+    ELSE        -> $-expecting-colon
     OVERHEAD    -> $-overhead-path
     VAR         >> $-var
     DATA        >> $-data-declaration

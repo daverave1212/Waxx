@@ -12,6 +12,11 @@ export default class ParserStates {
             this.currentExpression.type = 'FLOWCONTROLEXPRESSION'
             this.branchOut('PAREXPRESSION', '$-flow-control-expression')
         },
+        'ELSE':         () => {
+            this.push(this.currentNode.content)
+            this.currentExpression.type = 'ELSEEXPRESSION'
+            this.setState('$-expecting-colon')
+        },
         'OVERHEAD':     () => {
             this.currentExpression.type = 'OVERHEAD'
             this.setState('$-overhead-path')

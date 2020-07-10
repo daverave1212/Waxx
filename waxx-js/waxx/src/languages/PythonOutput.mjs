@@ -34,7 +34,10 @@ export class LanguageOutputter {
         'o':        '',
         'my':       'self.',
         'is':       '==',
-        'new':      ''
+        'new':      '',
+        'null':     'None',
+        'true':     'True',
+        'false':    'False'
     }
 
     getOverhead(path) { return  `# Overhead "${path}" not supported in Python (yet)` }
@@ -46,15 +49,19 @@ export class LanguageOutputter {
             if (mod == 'static') continue
         }
         if (generic != null) error('Python does not support generics.')
+        
+        let finalParameters = '' 
+        let outputParameter = par => (par.value == null) ? (par.name) : (par.name + ' = ' + par.value)
         if (isExpressionInClassScope(expression) && !modifiers.includes('static')) {
-            return 'def ' + name + pythonizeParametersWithSelf(parameters)
+            finalParameters = '(' + [{name: 'self'}, ...parameters].map(p => outputParameter(p)).join(', ') + ')'
         } else {
-            return 'def ' + name + parameters
+            finalParameters = '(' + parameters.map(p => outputParameter(p)).join(', ') + ')'
         }
+
+        return 'def ' + name + finalParameters    
     }
 
     getVarDeclaration({modifiers, name, type, expression}) {
-        let mods = ''
         for (let mod of modifiers) {
             if (mod == 'private') error('Python does not support private fields.')
             if (mod == 'export') error('Export is in JavaScript, partner, not Python.')
@@ -68,6 +75,10 @@ export class LanguageOutputter {
         return name + ' ' + deparenthesizeString(inner)
     }
 
+    getElseExpression({expression}) {
+        return 'else'
+    }
+
     getYAMLExpression({key, value}) {                                   // How to output code like: "age: 20"; key and value are strings, already processed
         if (value != null) return key + ': ' + value + ','              // If value is null, then it's a nested object next
         else return key + ':'
@@ -79,6 +90,10 @@ export class LanguageOutputter {
         } else {
             return spaces(indentation) + scopeLine
         }
+    }
+
+    getInlineIfExpression({condition, ifStatement, elseStatement}) {
+        return '(' + ifStatement + ') if (' + condition + ') else (' + elseStatement + ')'
     }
     
     endScope({baseIndentation, scope}) {                                // How to handle the closing of a scope. In JS, it's just a closed bracket on the same indentation level as the scope's line

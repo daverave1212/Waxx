@@ -23,7 +23,8 @@ export class LanguageOutputter {
         'and':      '&&',
         'or':       '||',
         'print':    'console.log',
-        'is':       '=='
+        'is':       '==',
+        'elif':     'else if'
     }
 
     getDataDeclaration({indentation, className, fields, expression}) {
@@ -58,10 +59,15 @@ export class LanguageOutputter {
             if (mod == 'static') mods += 'static '
         }
         if (generic != null) error('JavaScript does not support generics.')
+
+
+        let outputParameter = par => (par.value == null) ? (par.name) : (par.name + ' = ' + par.value)
+        let finalParameters = '(' + parameters.map(p => outputParameter(p)).join(', ') + ')'
+
         if (isExpressionInClassScope(expression)) {
-            return mods + name + parameters
+            return mods + name + finalParameters
         } else {
-            return mods + 'function ' + name + parameters
+            return mods + 'function ' + name + finalParameters
         }
     }
 
@@ -82,7 +88,13 @@ export class LanguageOutputter {
     }
 
     getFlowControlExpression({name, inner, expression}) {               // Name is 'if', 'while', etc. inner is the processed expression, with parentheses
-        return name + ' ' + inner
+        let actualName = name
+        if (name == 'elif') actualName = 'else if'
+        return actualName + ' ' + inner
+    }
+
+    getElseExpression({expression}) {
+        return 'else'
     }
 
     getYAMLExpression({key, value}) {                                   // How to output code like: "age: 20"; key and value are strings, already processed
