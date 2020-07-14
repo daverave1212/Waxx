@@ -30,7 +30,7 @@ export class LanguageOutputter {
     getDataDeclaration({indentation, className, fields, expression}) {
 
         function getCloneFunction() {
-            let ret = spaces(indentation + 4) + 'clone() {\n'
+            let ret = spaces(indentation + 4) + 'public function clone() {\n'
             ret += spaces(indentation + 8) + 'var __clone = new ' + className + '();\n'
             for (let {name, type, value} of fields) {
                 ret += spaces(indentation + 8) + `__clone.${name} = this.${name};\n`
@@ -42,7 +42,7 @@ export class LanguageOutputter {
 
         let ret = `class ${className} {\n`
         for (let {name, type, value} of fields) {
-            ret += spaces(indentation + 4) + name + (type==null ? '' : ' : ' + type) + (value==null ? '' : ' = ' + value) + ';\n'
+            ret += spaces(indentation + 4) + 'public var ' + name + (type==null ? '' : ' : ' + type) + (value==null ? '' : ' = ' + value) + ';\n'
         }
         ret += getCloneFunction()
         ret += spaces(indentation) + '}'
@@ -113,6 +113,10 @@ export class LanguageOutputter {
     
     endScope({baseIndentation, scope}) {                                // How to handle the closing of a scope. In JS, it's just a closed bracket on the same indentation level as the scope's line
         return spaces(baseIndentation) + '}'
+    }
+
+    getInlineIfExpression({condition, ifStatement, elseStatement}) {
+        return '(' + condition + ') ? (' + ifStatement + ') : (' + elseStatement + ')'
     }
 
 }

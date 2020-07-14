@@ -40,6 +40,26 @@ export class LanguageOutputter {
         'false':    'False'
     }
 
+    getDataDeclaration({indentation, className, fields, expression}) {
+
+        function getCloneFunction() {
+            let ret = spaces(indentation + 4) + 'def clone(self):\n'
+            ret += spaces(indentation + 8) + '__clone = ' + className + '()\n'
+            for (let {name, type, value} of fields) {
+                ret += spaces(indentation + 8) + `__clone.${name} = self.${name}\n`
+            }
+            ret += spaces(indentation + 8) + 'return __clone\n'
+            return ret
+        }
+
+        let ret = `class ${className}:\n`
+        for (let {name, type, value} of fields) {
+            ret += spaces(indentation + 4) + name /*+ (type==null ? '' : ' : ' + type)*/ + (value==null ? '' : ' = ' + value) + '\n'
+        }
+        ret += getCloneFunction()
+        return ret
+    }
+
     getOverhead(path) { return  `# Overhead "${path}" not supported in Python (yet)` }
 
     getFunctionDeclaration({modifiers, name, generic, parameters, expression}) {

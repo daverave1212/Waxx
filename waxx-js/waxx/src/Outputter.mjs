@@ -41,13 +41,22 @@ function splitTypedVarIntoExpressions(expression) {
     let expressions = splitArrayByIndicesExclusive(expression.content, splitPositions)
     let ret = {
         name : expressions[0],
-        type : expressions.length > 1 ? expressions[1] : null,
-        value : expressions.length > 2 ? expressions[2] : null
+        type : null,
+        value : null
     }
-    console.log('Returning')
-    console.log(ret)
+    if (colonPosition == -1 && equalPosition == -1) {                   // Ex: (age)
+        return ret
+    } else if (colonPosition != -1 && equalPosition == -1) {            // Ex: (age : Int)
+        ret.type = expression[1]
+    } else if (colonPosition == -1 && equalPosition != -1) {            // Ex: (age = 20)
+        ret.value  = expression[1]
+    } else {                                                            // Ex: (age : Int = 20)
+        ret.type = expressions[1]
+        ret.value = expressions[2]
+    }
     return ret
 }
+
 function parseParameterExpression(expr, scope, language) {
     let parameter = splitTypedVarIntoExpressions(expr)
     parameter.name  = joinStringsNodesBySpaces(parameter.name.map(node => outputNode({node, parentScope: scope, language: language})))
@@ -57,9 +66,11 @@ function parseParameterExpression(expr, scope, language) {
 }
 
 function getParameters(fullParameterExpression, scope, language) {
+    console.log('Getting parameters')
     if (fullParameterExpression.isTuple) {
         return fullParameterExpression.content.map(expr => parseParameterExpression(expr, scope, language))
     } else {
+        if (fullParameterExpression.content.length == 0) return []
         return [parseParameterExpression(fullParameterExpression, scope, language)]
     }
 }
