@@ -44,16 +44,20 @@ function splitTypedVarIntoExpressions(expression) {
         type : null,
         value : null
     }
+    console.log({colonPosition})
+    console.log({equalPosition})
     if (colonPosition == -1 && equalPosition == -1) {                   // Ex: (age)
         return ret
     } else if (colonPosition != -1 && equalPosition == -1) {            // Ex: (age : Int)
-        ret.type = expression[1]
+        ret.type = expressions[1]
     } else if (colonPosition == -1 && equalPosition != -1) {            // Ex: (age = 20)
-        ret.value  = expression[1]
+        ret.value  = expressions[1]
     } else {                                                            // Ex: (age : Int = 20)
         ret.type = expressions[1]
         ret.value = expressions[2]
     }
+    console.log('Returning ret as:')
+    console.log({ret})
     return ret
 }
 
