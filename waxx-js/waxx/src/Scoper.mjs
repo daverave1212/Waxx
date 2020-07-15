@@ -10,6 +10,8 @@ class Scope {
         this.parent = parent
         this.indentation = indentation
         this.type = 'SCOPE'
+        this.isYAMLDefinition = false               // True if the line ended in "yaml:"
+        this.isYAMLContent = false                  // True if it's under the scope of a "yaml:" line
     }
 
     toString() {

@@ -109,7 +109,8 @@ export class LanguageOutputter {
     }
     
     endScope({baseIndentation, scope}) {                                // How to handle the closing of a scope. In JS, it's just a closed bracket on the same indentation level as the scope's line
-        return spaces(baseIndentation) + '}'
+        if (scope.isYAMLContent) return spaces(baseIndentation) + '},'
+        else return spaces(baseIndentation) + '}'
     }
 
     getInlineIfExpression({condition, ifStatement, elseStatement}) {

@@ -117,11 +117,12 @@ function joinStringsNodesBySpaces(strings) {
         '.'         : true,
         'this.'     : true
     }
-
+    strings = strings.filter(str => str.length > 0)
     let prev = strings[0]
     let ret = prev
     for (let i = 1; i < strings.length; i++) {
         let current = strings[i]
+        console.log(`Current = ${current}`)
         if (noSpaceAfter[prev] == true || noSpaceBefore[current] == true) {
             ret += current
         } else {

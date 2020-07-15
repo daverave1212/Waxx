@@ -100,8 +100,10 @@ function parseScope(baseScope, isYaml = false) {
             isYAML: isYaml
         })
         baseScope.expression = parser.parse()
+        baseScope.isYAMLContent = isYaml
     }
     if (parser != null && parser.areChildScopesYAML) {                // The 'areChildScopesYAML' property is set during parsing
+        baseScope.isYAMLDefinition = true
         for (let scope of baseScope.content) {
             parseScope(scope, true)                 // Parses all content as YAML
         }
